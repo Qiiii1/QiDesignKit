@@ -103,4 +103,74 @@ describe("polygon text layout", () => {
       ),
     ).toEqual([{ text: "明", x: 0, y: 10 }]);
   });
+
+  it("skips units with non-positive horizontal measurements", () => {
+    expect(
+      layoutTextInPolygon(
+        square,
+        ["zero", "negative", "明"],
+        createOptions({
+          measure: (text) => {
+            if (text === "zero") {
+              return 0;
+            }
+            return text === "negative" ? -10 : 10;
+          },
+        }),
+      ),
+    ).toEqual([{ text: "明", x: 0, y: 10 }]);
+  });
+
+  it("rejects horizontal glyph boxes that leak outside a narrowing polygon", () => {
+    const wideningTriangle = [
+      { x: 10, y: 0 },
+      { x: 20, y: 20 },
+      { x: 0, y: 20 },
+    ];
+
+    expect(
+      layoutTextInPolygon(wideningTriangle, ["明"], createOptions()),
+    ).toEqual([]);
+  });
+
+  it("moves wide vertical words left until their glyph box fits", () => {
+    expect(
+      layoutTextInPolygon(
+        square,
+        ["hello"],
+        createOptions({
+          mode: "vertical",
+          measure: (text) => text === "hello" ? 50 : 10,
+        }),
+      ),
+    ).toEqual([{ text: "hello", x: 70, y: 10 }]);
+  });
+
+  it("stops scanning when huge coordinates prevent forward progress", () => {
+    const origin = 1e20;
+    const hugeSquare = [
+      { x: origin, y: origin },
+      { x: origin + 1e10, y: origin },
+      { x: origin + 1e10, y: origin + 1e10 },
+      { x: origin, y: origin + 1e10 },
+    ];
+    let measurements = 0;
+
+    expect(
+      layoutTextInPolygon(
+        hugeSquare,
+        ["too-wide"],
+        createOptions({
+          measure: () => {
+            measurements += 1;
+            if (measurements > 10_000) {
+              throw new Error("scanline iteration guard exceeded");
+            }
+            return Number.MAX_VALUE;
+          },
+        }),
+      ),
+    ).toEqual([]);
+    expect(measurements).toBeLessThanOrEqual(10_000);
+  });
 });

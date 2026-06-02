@@ -3,9 +3,12 @@ export interface TextUnit {
   tokenCost: 0 | 1;
 }
 
-const HAN_CHARACTER = /^\p{Script=Han}$/u;
-const LETTER_OR_NUMBER = /^[\p{L}\p{N}]$/u;
-const WHITESPACE = /^\s$/u;
+const GRAPHEME_SEGMENTER = new Intl.Segmenter(undefined, {
+  granularity: "grapheme",
+});
+const HAN_CHARACTER = /^\p{Script=Han}/u;
+const LETTER_OR_NUMBER = /^[\p{L}\p{N}]/u;
+const WHITESPACE = /^\s+$/u;
 
 function tokenizeDisplayUnits(text: string): TextUnit[] {
   const units: TextUnit[] = [];
@@ -18,16 +21,16 @@ function tokenizeDisplayUnits(text: string): TextUnit[] {
     }
   };
 
-  for (const character of text) {
-    if (HAN_CHARACTER.test(character)) {
+  for (const { segment: grapheme } of GRAPHEME_SEGMENTER.segment(text)) {
+    if (HAN_CHARACTER.test(grapheme)) {
       appendWord();
-      units.push({ text: character, tokenCost: 1 });
-    } else if (LETTER_OR_NUMBER.test(character)) {
-      word += character;
+      units.push({ text: grapheme, tokenCost: 1 });
+    } else if (LETTER_OR_NUMBER.test(grapheme)) {
+      word += grapheme;
     } else {
       appendWord();
-      if (!WHITESPACE.test(character)) {
-        units.push({ text: character, tokenCost: 0 });
+      if (!WHITESPACE.test(grapheme)) {
+        units.push({ text: grapheme, tokenCost: 0 });
       }
     }
   }

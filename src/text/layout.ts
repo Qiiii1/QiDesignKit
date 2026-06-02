@@ -26,6 +26,9 @@ interface PolygonBounds {
   maxY: number;
 }
 
+const GLYPH_BOX_EPSILON = 1e-6;
+const MAX_SCANLINE_ITERATIONS = 10_000;
+
 function getPolygonBounds(polygon: Point[]): PolygonBounds | undefined {
   if (
     polygon.length === 0
@@ -63,7 +66,41 @@ function getMeasuredWidth(
   text: string,
 ): number | undefined {
   const width = measure(text);
-  return Number.isFinite(width) ? Math.max(1, width) : undefined;
+  return Number.isFinite(width) && width > 0 ? Math.max(1, width) : undefined;
+}
+
+function glyphBoxFitsInPolygon(
+  polygon: Point[],
+  x: number,
+  baselineY: number,
+  width: number,
+  fontSize: number,
+  padding: number,
+): boolean {
+  const top = baselineY - fontSize;
+  const bottom = baselineY;
+  const epsilon = Math.min(GLYPH_BOX_EPSILON, fontSize / 4);
+  const minimumSampleY = top + epsilon;
+  const maximumSampleY = bottom - epsilon;
+  const sampleYs = new Set([
+    minimumSampleY,
+    (top + bottom) / 2,
+    maximumSampleY,
+  ]);
+
+  for (const point of polygon) {
+    if (point.y > top && point.y < bottom) {
+      sampleYs.add(Math.max(minimumSampleY, point.y - epsilon));
+      sampleYs.add(Math.min(maximumSampleY, point.y + epsilon));
+    }
+  }
+
+  return [...sampleYs].every((sampleY) => (
+    getHorizontalSegments(polygon, sampleY).some((segment) => (
+      x >= segment.start + padding - epsilon
+      && x + width <= segment.end - padding + epsilon
+    ))
+  ));
 }
 
 function layoutHorizontalText(
@@ -75,11 +112,14 @@ function layoutHorizontalText(
   const placements: PlacedText[] = [];
   const lineStep = Math.max(1, options.fontSize + options.lineSpacing);
   let unitIndex = 0;
+  let y = bounds.minY + options.padding + options.fontSize;
 
   for (
-    let y = bounds.minY + options.padding + options.fontSize;
-    y <= bounds.maxY - options.padding && unitIndex < units.length;
-    y += lineStep
+    let scanlineIndex = 0;
+    y <= bounds.maxY - options.padding
+      && unitIndex < units.length
+      && scanlineIndex < MAX_SCANLINE_ITERATIONS;
+    scanlineIndex += 1
   ) {
     for (const segment of getHorizontalSegments(polygon, y)) {
       let x = segment.start + options.padding;
@@ -94,19 +134,39 @@ function layoutHorizontalText(
           continue;
         }
 
-        if (x + width > end) {
+        if (
+          x + width > end
+          || !glyphBoxFitsInPolygon(
+            polygon,
+            x,
+            y,
+            width,
+            options.fontSize,
+            options.padding,
+          )
+        ) {
           break;
         }
 
         placements.push({ text, x, y });
         unitIndex += 1;
-        x += Math.max(1, width + options.letterSpacing);
+        const nextX = x + Math.max(1, width + options.letterSpacing);
+        if (nextX === x) {
+          break;
+        }
+        x = nextX;
       }
 
       if (unitIndex >= units.length) {
         return placements;
       }
     }
+
+    const nextY = y + lineStep;
+    if (nextY === y) {
+      break;
+    }
+    y = nextY;
   }
 
   return placements;
@@ -122,28 +182,65 @@ function layoutVerticalText(
   const columnStep = Math.max(1, options.fontSize + options.lineSpacing);
   const letterStep = Math.max(1, options.fontSize + options.letterSpacing);
   let unitIndex = 0;
+  let x = bounds.maxX - options.padding - options.fontSize;
 
   for (
-    let x = bounds.maxX - options.padding - options.fontSize;
-    x >= bounds.minX + options.padding && unitIndex < units.length;
-    x -= columnStep
+    let columnIndex = 0;
+    x >= bounds.minX + options.padding
+      && unitIndex < units.length
+      && columnIndex < MAX_SCANLINE_ITERATIONS;
+    columnIndex += 1
   ) {
     for (const segment of getVerticalSegments(polygon, x)) {
       const end = segment.end - options.padding;
 
-      for (
-        let y = segment.start + options.padding + options.fontSize;
-        y <= end && unitIndex < units.length;
-        y += letterStep
+      let y = segment.start + options.padding + options.fontSize;
+      let rowIndex = 0;
+      while (
+        y <= end
+        && unitIndex < units.length
+        && rowIndex < MAX_SCANLINE_ITERATIONS
       ) {
-        placements.push({ text: units[unitIndex], x, y });
-        unitIndex += 1;
+        const text = units[unitIndex];
+        const width = getMeasuredWidth(options.measure, text);
+
+        if (width === undefined) {
+          unitIndex += 1;
+          continue;
+        }
+
+        if (
+          glyphBoxFitsInPolygon(
+            polygon,
+            x,
+            y,
+            width,
+            options.fontSize,
+            options.padding,
+          )
+        ) {
+          placements.push({ text, x, y });
+          unitIndex += 1;
+        }
+
+        const nextY = y + letterStep;
+        if (nextY === y) {
+          break;
+        }
+        y = nextY;
+        rowIndex += 1;
       }
 
       if (unitIndex >= units.length) {
         return placements;
       }
     }
+
+    const nextX = x - columnStep;
+    if (nextX === x) {
+      break;
+    }
+    x = nextX;
   }
 
   return placements;

@@ -46,4 +46,19 @@ describe("text tokenization", () => {
       { text: "明", tokenCost: 1 },
     ]);
   });
+
+  it("keeps combining marks attached to their reading word", () => {
+    expect(tokenizeReadingWords("cafe\u0301")).toEqual(["cafe\u0301"]);
+    expect(prepareTextUnits("cafe\u0301", 1, false)).toEqual([
+      { text: "cafe\u0301", tokenCost: 1 },
+    ]);
+  });
+
+  it("keeps variation selectors attached to their visible symbol", () => {
+    expect(prepareTextUnits("明❤️月", 2, false)).toEqual([
+      { text: "明", tokenCost: 1 },
+      { text: "❤️", tokenCost: 0 },
+      { text: "月", tokenCost: 1 },
+    ]);
+  });
 });
