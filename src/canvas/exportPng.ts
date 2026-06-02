@@ -42,5 +42,5 @@ export async function exportDocumentPng(
 
   renderDocument(context, document, { scale: 1, editorMode: false });
   const blob = await createPngBlob(canvas);
-  (dependencies.download ?? downloadBlob)(blob, "verseform.png");
+  (dependencies.download ?? downloadBlob)(blob, "visual-text.png");
 }

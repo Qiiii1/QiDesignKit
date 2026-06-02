@@ -5,20 +5,16 @@ import type { CanvasBackground } from "../domain/types";
 interface TopBarProps {
   background: CanvasBackground;
   canUndo: boolean;
-  showContours: boolean;
   onBackgroundChange: (background: CanvasBackground) => void;
   onExport: () => void;
-  onToggleContours: () => void;
   onUndo: () => void;
 }
 
 export function TopBar({
   background,
   canUndo,
-  showContours,
   onBackgroundChange,
   onExport,
-  onToggleContours,
   onUndo,
 }: TopBarProps) {
   const [width, setWidth] = useState(String(background.width));
@@ -44,14 +40,6 @@ export function TopBar({
 
   return (
     <header className="top-bar">
-      <div className="brand-lockup">
-        <div className="brand-mark">V</div>
-        <div>
-          <h1>Verseform</h1>
-          <p>诗歌文字雕塑编辑器</p>
-        </div>
-      </div>
-
       <div className="canvas-settings" aria-label="画布设置">
         <span className="eyebrow">画布</span>
         <label>
@@ -90,9 +78,6 @@ export function TopBar({
 
       <div className="top-actions">
         <button disabled={!canUndo} onClick={onUndo} type="button">撤销</button>
-        <button onClick={onToggleContours} type="button">
-          {showContours ? "隐藏轮廓" : "显示轮廓"}
-        </button>
         <button className="button-primary" onClick={onExport} type="button">
           导出 PNG
         </button>

@@ -6,7 +6,6 @@ describe("domain defaults", () => {
     expect(createDefaultDocument()).toMatchObject({
       background: { kind: "solid", width: 1200, height: 1200, color: "#ffffff" },
       regions: [],
-      showContours: true,
     });
   });
 

@@ -10,7 +10,13 @@ describe("project store", () => {
   beforeEach(async () => deleteDatabase());
 
   it("restores a saved document and undo history", async () => {
-    const document = { ...createDefaultDocument(), showContours: false };
+    const document = {
+      ...createDefaultDocument(),
+      background: {
+        ...createDefaultDocument().background,
+        color: "#000000",
+      },
+    };
     const history = [createDefaultDocument()];
 
     await saveProject({ document, history });
@@ -27,7 +33,13 @@ describe("project store", () => {
       document: createDefaultDocument(),
       history: [],
     });
-    const document = { ...createDefaultDocument(), showContours: false };
+    const document = {
+      ...createDefaultDocument(),
+      background: {
+        ...createDefaultDocument().background,
+        color: "#000000",
+      },
+    };
 
     await saveProject({ document, history: [] });
 

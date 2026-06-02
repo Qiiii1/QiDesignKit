@@ -104,7 +104,7 @@ export function Inspector({
         <h2>{selectedRegion === undefined ? "下一片区域" : "当前区域"}</h2>
         <p>
           {selectedRegion === undefined
-            ? "先选择诗歌，再在画布上自由勾勒。"
+            ? "先选择文本，再在画布上自由勾勒。"
             : "调整文字密度，让轮廓逐渐长成你的形状。"}
         </p>
       </div>
@@ -152,7 +152,7 @@ export function Inspector({
           role="tab"
           type="button"
         >
-          诗歌
+          文本
         </button>
         <button
           aria-selected={activeTab === "region"}
@@ -172,7 +172,7 @@ export function Inspector({
               onClick={() => selectPoem(settings.poemId ?? POEMS[0].id)}
               type="button"
             >
-              内置诗歌
+              预设文本
             </button>
             <button
               aria-pressed={settings.poetrySource === "custom"}
@@ -186,7 +186,7 @@ export function Inspector({
             </button>
           </div>
           <label className="field">
-            <span>诗歌选集</span>
+            <span>文本预设</span>
             <select
               onChange={(event) => selectPoem(event.target.value)}
               value={settings.poemId ?? POEMS[0].id}
@@ -201,7 +201,7 @@ export function Inspector({
           <label className="field">
             <span>填充文本</span>
             <textarea
-              aria-label="诗歌文本"
+              aria-label="填充文本内容"
               onChange={(event) => onPatch({
                 poemId: undefined,
                 poetrySource: "custom",

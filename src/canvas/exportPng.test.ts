@@ -23,7 +23,7 @@ describe("exportDocumentPng", () => {
 
     expect(canvas.width).toBe(640);
     expect(canvas.height).toBe(960);
-    expect(download).toHaveBeenCalledWith(expect.any(Blob), "verseform.png");
+    expect(download).toHaveBeenCalledWith(expect.any(Blob), "visual-text.png");
   });
 
   it("rejects when a PNG blob cannot be created", async () => {

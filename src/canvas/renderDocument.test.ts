@@ -48,7 +48,7 @@ describe("renderDocument", () => {
     expect(calls).toContain("node");
   });
 
-  it("omits contours when the global contour switch is off", () => {
+  it("ignores a legacy document-level contour switch", () => {
     const calls: string[] = [];
     const context = createRecordingContext(calls);
     const region = createDefaultRegion([
@@ -56,14 +56,19 @@ describe("renderDocument", () => {
       { x: 200, y: 0 },
       { x: 0, y: 200 },
     ]);
+    const legacyDocument = {
+      ...createDefaultDocument(),
+      regions: [region],
+      showContours: false,
+    };
 
     renderDocument(
       context,
-      { ...createDefaultDocument(), regions: [region], showContours: false },
+      legacyDocument,
       { scale: 1, editorMode: false },
     );
 
-    expect(calls).not.toContain("contour");
+    expect(calls).toContain("contour");
   });
 
   it("omits a contour when its region switch is off", () => {

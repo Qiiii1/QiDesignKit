@@ -33,22 +33,8 @@ button:disabled { cursor: not-allowed; opacity: 0.48; }
   justify-content: space-between;
   padding: 0 22px;
 }
-.brand-lockup, .canvas-settings, .top-actions { align-items: center; display: flex; }
-.brand-lockup { gap: 11px; min-width: 224px; }
-.brand-mark {
-  align-items: center;
-  border: 1px solid rgba(247, 243, 236, 0.42);
-  border-radius: 50%;
-  display: flex;
-  font-family: Georgia, serif;
-  font-size: 17px;
-  height: 38px;
-  justify-content: center;
-  width: 38px;
-}
-h1, h2, p { margin: 0; }
-h1 { font-family: Georgia, "Noto Serif SC", serif; font-size: 20px; font-weight: 500; letter-spacing: 0.08em; }
-.brand-lockup p { color: rgba(247, 243, 236, 0.58); font-size: 10px; letter-spacing: 0.12em; margin-top: 3px; }
+.canvas-settings, .top-actions { align-items: center; display: flex; }
+h2, p { margin: 0; }
 .canvas-settings { gap: 8px; }
 .canvas-settings label { align-items: center; display: flex; gap: 5px; }
 .canvas-settings label span, .eyebrow { color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; }

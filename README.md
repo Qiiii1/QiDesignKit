@@ -1,7 +1,7 @@
-# Verseform
+# Visual Text Tool
 
-Verseform is a browser-local poetry image editor. Choose a solid-color canvas,
-draw freeform regions, densely fill each region with included or custom poetry,
+Visual Text Tool is a browser-local text-effects editor. Choose a solid-color
+canvas, draw freeform regions, densely fill each region with preset or custom text,
 select regions to adjust their typography, text color, optional region color,
 and contour visibility independently, undo recent changes, and export an
 original-size PNG.
@@ -22,5 +22,5 @@ npm run build
 
 ## Storage
 
-The active project is saved in IndexedDB in the current browser. Verseform does
+The active project is saved in IndexedDB in the current browser. The editor does
 not upload artwork to a server.

@@ -30,5 +30,4 @@ export interface TextRegion {
 export interface EditorDocument {
   background: CanvasBackground;
   regions: TextRegion[];
-  showContours: boolean;
 }

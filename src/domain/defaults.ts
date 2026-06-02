@@ -30,7 +30,6 @@ export function createDefaultDocument(): EditorDocument {
   return {
     background: { kind: "solid", width: 1200, height: 1200, color: "#ffffff" },
     regions: [],
-    showContours: true,
   };
 }
 

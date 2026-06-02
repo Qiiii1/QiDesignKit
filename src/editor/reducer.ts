@@ -22,7 +22,6 @@ export interface EditorState {
 export type EditorAction =
   | { type: "project/hydrate"; document: EditorDocument; history: EditorDocument[] }
   | { type: "background/set"; background: CanvasBackground }
-  | { type: "contours/toggle" }
   | { type: "history/undo" }
   | { type: "region/add"; region: TextRegion }
   | { type: "region/delete-selected" }
@@ -78,11 +77,6 @@ export function editorReducer(
       return commitDocument(state, {
         ...state.document,
         background: { ...action.background },
-      });
-    case "contours/toggle":
-      return commitDocument(state, {
-        ...state.document,
-        showContours: !state.document.showContours,
       });
     case "history/undo": {
       const document = state.history.at(-1);

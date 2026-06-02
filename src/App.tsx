@@ -101,11 +101,9 @@ export function App() {
           background,
         })}
         onExport={exportPng}
-        onToggleContours={() => dispatch({ type: "contours/toggle" })}
         onUndo={() => dispatch({ type: "history/undo" })}
-        showContours={state.document.showContours}
       />
-      <section className="editor-frame" aria-label="诗歌创作编辑器">
+      <section className="editor-frame" aria-label="视觉文字效果编辑器">
         <ToolRail
           onToolChange={(tool) => dispatch({ type: "tool/set", tool })}
           tool={state.tool}

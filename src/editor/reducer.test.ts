@@ -51,14 +51,26 @@ describe("editor reducer", () => {
     let state = createEditorState(createDefaultDocument());
 
     for (let index = 0; index < 55; index += 1) {
-      state = editorReducer(state, { type: "contours/toggle" });
+      state = editorReducer(state, {
+        type: "background/set",
+        background: {
+          ...state.document.background,
+          color: index % 2 === 0 ? "#000000" : "#ffffff",
+        },
+      });
     }
 
     expect(state.history).toHaveLength(50);
   });
 
   it("hydrates a restored project without adding a new undo snapshot", () => {
-    const restored = { ...createDefaultDocument(), showContours: false };
+    const restored = {
+      ...createDefaultDocument(),
+      background: {
+        ...createDefaultDocument().background,
+        color: "#000000",
+      },
+    };
     const history = Array.from({ length: 55 }, () => createDefaultDocument());
     const state = editorReducer(createEditorState(createDefaultDocument()), {
       type: "project/hydrate",
@@ -66,7 +78,7 @@ describe("editor reducer", () => {
       history,
     });
 
-    expect(state.document.showContours).toBe(false);
+    expect(state.document.background.color).toBe("#000000");
     expect(state.history).toHaveLength(50);
   });
 

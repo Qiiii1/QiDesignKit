@@ -11,7 +11,7 @@ import {
 describe("App editor workflow", () => {
   beforeEach(async () => deleteDatabase());
 
-  it("switches tools, toggles contours, and changes solid canvas dimensions", async () => {
+  it("switches tools and changes solid canvas dimensions without a global contour toggle", async () => {
     const user = userEvent.setup();
     render(<App />);
 
@@ -21,24 +21,31 @@ describe("App editor workflow", () => {
     await user.click(screen.getByRole("button", { name: "绘制区域" }));
     expect(screen.getByRole("button", { name: "绘制区域" }))
       .toHaveAttribute("aria-pressed", "true");
-    await user.click(screen.getByRole("button", { name: "隐藏轮廓" }));
-    expect(screen.getByRole("button", { name: "显示轮廓" }))
-      .toBeInTheDocument();
-    await user.clear(screen.getByLabelText("画布宽度"));
-    await user.type(screen.getByLabelText("画布宽度"), "640");
+    expect(screen.queryByRole("button", { name: "隐藏轮廓" }))
+      .not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "显示轮廓" }))
+      .not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("画布宽度"), {
+      target: { value: "640" },
+    });
     await user.clear(screen.getByLabelText("画布高度"));
     await user.type(screen.getByLabelText("画布高度"), "960");
 
     expect(screen.getByText("640 × 960 px")).toBeInTheDocument();
   });
 
-  it("exposes included poems and custom text", async () => {
+  it("uses neutral text labels while exposing presets and custom text", async () => {
     const user = userEvent.setup();
     render(<App />);
 
     expect(screen.getByRole("option", { name: "静夜思 · 李白" }))
       .toBeInTheDocument();
-    const textInput = screen.getByLabelText("诗歌文本");
+    expect(screen.queryByText("Verseform")).not.toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "文本" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "预设文本" }))
+      .toBeInTheDocument();
+    expect(screen.queryByText(/诗歌/)).not.toBeInTheDocument();
+    const textInput = screen.getByLabelText("填充文本内容");
     await user.clear(textInput);
     await user.type(textInput, "海风吹过自己的句子");
 
@@ -70,11 +77,12 @@ describe("App editor workflow", () => {
     const user = userEvent.setup();
     render(<App />);
 
-    await user.click(screen.getByRole("button", { name: "隐藏轮廓" }));
+    fireEvent.change(screen.getByLabelText("画布宽度"), {
+      target: { value: "640" },
+    });
     await user.click(screen.getByRole("button", { name: "撤销" }));
 
-    expect(screen.getByRole("button", { name: "隐藏轮廓" }))
-      .toBeInTheDocument();
+    expect(screen.getByText("1200 × 1200 px")).toBeInTheDocument();
   });
 
   it("enables region typography controls after drawing a usable shape", async () => {
