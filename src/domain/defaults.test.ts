@@ -21,14 +21,14 @@ describe("domain defaults", () => {
   });
 
   it("creates independent default region data", () => {
-    const first = createDefaultRegion([{ x: 0, y: 0 }, { x: 50, y: 0 }, { x: 0, y: 50 }]);
-    const second = createDefaultRegion([{ x: 0, y: 0 }, { x: 40, y: 0 }, { x: 0, y: 40 }]);
-    first.points[0].x = 999;
-    expect(second.points[0].x).toBe(0);
-    expect(first.writingMode).toBe("horizontal");
-    expect(first.fontWeight).toBe(700);
-    expect(first.lineSpacing).toBe(-4);
-    expect(first.letterSpacing).toBe(-2);
-    expect(first.repeatFill).toBe(true);
+    const sourcePoints = [{ x: 0, y: 0 }, { x: 50, y: 0 }, { x: 0, y: 50 }];
+    const region = createDefaultRegion(sourcePoints);
+    region.points[0].x = 999;
+    expect(sourcePoints[0].x).toBe(0);
+    expect(region.writingMode).toBe("horizontal");
+    expect(region.fontWeight).toBe(700);
+    expect(region.lineSpacing).toBe(-4);
+    expect(region.letterSpacing).toBe(-2);
+    expect(region.repeatFill).toBe(true);
   });
 });
