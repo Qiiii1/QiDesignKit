@@ -33,5 +33,6 @@ describe("domain defaults", () => {
     expect(region.maxWords).toBe(1200);
     expect(region.fillColor).toBe("transparent");
     expect(region.repeatFill).toBe(true);
+    expect(region.showContour).toBe(true);
   });
 });

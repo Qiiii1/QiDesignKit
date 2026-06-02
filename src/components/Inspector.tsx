@@ -23,9 +23,12 @@ const REGION_FILL_PALETTE = [
 
 interface InspectorProps {
   nextRegionDefaults: RegionSettings;
+  regions: TextRegion[];
+  selectedRegionId?: string;
   selectedRegion?: TextRegion;
   onDeleteRegion: () => void;
   onPatch: (patch: Partial<RegionSettings>) => void;
+  onSelectRegion: (regionId: string) => void;
 }
 
 interface NumberFieldProps {
@@ -69,9 +72,12 @@ function NumberField({
 
 export function Inspector({
   nextRegionDefaults,
+  regions,
+  selectedRegionId,
   selectedRegion,
   onDeleteRegion,
   onPatch,
+  onSelectRegion,
 }: InspectorProps) {
   const [activeTab, setActiveTab] = useState<"poetry" | "region">("poetry");
   const settings = selectedRegion ?? nextRegionDefaults;
@@ -102,6 +108,42 @@ export function Inspector({
             : "调整文字密度，让轮廓逐渐长成你的形状。"}
         </p>
       </div>
+
+      {regions.length > 0 ? (
+        <section className="region-selector" aria-label="选区列表">
+          <span className="eyebrow">选区</span>
+          <div className="region-list">
+            {regions.map((region, index) => (
+              <button
+                aria-label={`选择区域 ${index + 1}`}
+                aria-pressed={selectedRegionId === region.id}
+                key={region.id}
+                onClick={() => onSelectRegion(region.id)}
+                type="button"
+              >
+                <span>区域 {String(index + 1).padStart(2, "0")}</span>
+                <span className="region-list-previews" aria-hidden="true">
+                  <span
+                    className="region-list-preview"
+                    style={{ backgroundColor: region.color }}
+                  />
+                  <span
+                    className={`region-list-preview${!region.fillColor || region.fillColor === "transparent" ? " region-list-preview--transparent" : ""}`}
+                    style={{
+                      backgroundColor: !region.fillColor || region.fillColor === "transparent"
+                        ? "#ffffff"
+                        : region.fillColor,
+                    }}
+                  />
+                  <span className={`region-list-contour${region.showContour === false ? " region-list-contour--hidden" : ""}`}>
+                    线
+                  </span>
+                </span>
+              </button>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <div className="inspector-tabs" role="tablist" aria-label="属性分类">
         <button
@@ -254,6 +296,15 @@ export function Inspector({
             />
           </label>
           <NumberField disabled={disabled} label="轮廓粗细" min={0.5} onChange={updateNumber("contourWidth")} step={0.5} value={settings.contourWidth} />
+          <label className="check-field">
+            <input
+              checked={settings.showContour !== false}
+              disabled={disabled}
+              onChange={(event) => onPatch({ showContour: event.target.checked })}
+              type="checkbox"
+            />
+            <span>显示当前区域轮廓</span>
+          </label>
           <label className="check-field">
             <input
               checked={settings.repeatFill}

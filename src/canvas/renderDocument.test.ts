@@ -66,6 +66,43 @@ describe("renderDocument", () => {
     expect(calls).not.toContain("contour");
   });
 
+  it("omits a contour when its region switch is off", () => {
+    const calls: string[] = [];
+    const context = createRecordingContext(calls);
+    const region = createDefaultRegion([
+      { x: 0, y: 0 },
+      { x: 200, y: 0 },
+      { x: 0, y: 200 },
+    ], { showContour: false });
+
+    renderDocument(
+      context,
+      { ...createDefaultDocument(), regions: [region] },
+      { scale: 1, editorMode: false },
+    );
+
+    expect(calls).not.toContain("contour");
+  });
+
+  it("keeps contours visible for older saved regions without a local switch", () => {
+    const calls: string[] = [];
+    const context = createRecordingContext(calls);
+    const region = createDefaultRegion([
+      { x: 0, y: 0 },
+      { x: 200, y: 0 },
+      { x: 0, y: 200 },
+    ]) as Partial<ReturnType<typeof createDefaultRegion>>;
+    delete region.showContour;
+
+    renderDocument(
+      context,
+      { ...createDefaultDocument(), regions: [region as ReturnType<typeof createDefaultRegion>] },
+      { scale: 1, editorMode: false },
+    );
+
+    expect(calls).toContain("contour");
+  });
+
   it("draws an optional region fill before clipped text", () => {
     const calls: string[] = [];
     const context = createRecordingContext(calls);

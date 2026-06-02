@@ -22,6 +22,7 @@ export interface TextRegion {
   color: string;
   fillColor: string;
   repeatFill: boolean;
+  showContour: boolean;
   contourColor: string;
   contourWidth: number;
 }

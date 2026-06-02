@@ -2,7 +2,8 @@
 
 Verseform is a browser-local poetry image editor. Choose a solid-color canvas,
 draw freeform regions, densely fill each region with included or custom poetry,
-adjust the typography, contour, and optional region color, undo recent changes, and export an
+select regions to adjust their typography, text color, optional region color,
+and contour visibility independently, undo recent changes, and export an
 original-size PNG.
 
 ## Run locally

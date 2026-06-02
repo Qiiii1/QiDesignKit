@@ -16,6 +16,7 @@ export const DEFAULT_REGION_STYLE: Omit<TextRegion, "id" | "points"> = {
   color: "#111111",
   fillColor: "transparent",
   repeatFill: true,
+  showContour: true,
   contourColor: "#111111",
   contourWidth: 1.5,
 };

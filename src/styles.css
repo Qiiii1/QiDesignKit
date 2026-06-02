@@ -123,6 +123,35 @@ h1 { font-family: Georgia, "Noto Serif SC", serif; font-size: 20px; font-weight:
 .inspector-heading { border-bottom: 1px solid var(--line); padding: 20px 20px 16px; }
 .inspector-heading h2 { font-family: Georgia, "Noto Serif SC", serif; font-size: 22px; font-weight: 500; margin: 5px 0 7px; }
 .inspector-heading p, .inspector-note, .empty-selection { color: var(--muted); font-size: 12px; line-height: 1.65; }
+.region-selector { border-bottom: 1px solid var(--line); padding: 13px 16px 14px; }
+.region-list { display: grid; gap: 6px; margin-top: 8px; }
+.region-list button {
+  align-items: center;
+  background: var(--panel-bright);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  color: var(--ink);
+  display: flex;
+  font-size: 12px;
+  justify-content: space-between;
+  padding: 8px 9px;
+}
+.region-list button:hover { border-color: #dfb49f; }
+.region-list button[aria-pressed="true"] { background: #efe0d5; border-color: var(--terracotta); color: var(--terracotta-dark); font-weight: 700; }
+.region-list-previews { align-items: center; display: flex; gap: 5px; }
+.region-list-preview { border: 1px solid rgba(41, 39, 32, 0.18); border-radius: 50%; height: 14px; position: relative; width: 14px; }
+.region-list-preview--transparent::after {
+  background: #c2775a;
+  content: "";
+  height: 1px;
+  left: 1px;
+  position: absolute;
+  top: 6px;
+  transform: rotate(-45deg);
+  width: 10px;
+}
+.region-list-contour { color: var(--muted); font-size: 10px; text-decoration: none; }
+.region-list-contour--hidden { opacity: 0.4; text-decoration: line-through; }
 .inspector-tabs { border-bottom: 1px solid var(--line); display: grid; grid-template-columns: 1fr 1fr; padding: 0 16px; }
 .inspector-tabs button {
   background: transparent;

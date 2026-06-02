@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "vitest";
 import { App } from "./App";
-import { createDefaultDocument } from "./domain/defaults";
+import { createDefaultDocument, createDefaultRegion } from "./domain/defaults";
 import {
   deleteDatabase,
   saveProject,
@@ -94,5 +94,47 @@ describe("App editor workflow", () => {
     expect(screen.getByLabelText("字距")).toHaveValue(-4);
     expect(screen.getByRole("button", { name: "雾粉底色" }))
       .toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("switches inspector regions and keeps typography, color, and contours independent", async () => {
+    const first = createDefaultRegion([
+      { x: 0, y: 0 },
+      { x: 200, y: 0 },
+      { x: 0, y: 200 },
+    ]);
+    const second = createDefaultRegion([
+      { x: 240, y: 0 },
+      { x: 440, y: 0 },
+      { x: 240, y: 200 },
+    ]);
+    await saveProject({
+      document: { ...createDefaultDocument(), regions: [first, second] },
+      history: [],
+    });
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(await screen.findByRole("button", { name: "选择区域 1" }));
+    await user.click(screen.getByRole("tab", { name: "区域" }));
+    await user.selectOptions(screen.getByLabelText("字体"), '"Georgia", "Noto Serif SC", serif');
+    fireEvent.change(screen.getByLabelText("字体颜色"), {
+      target: { value: "#ff0000" },
+    });
+    await user.click(screen.getByRole("checkbox", { name: "显示当前区域轮廓" }));
+
+    await user.click(screen.getByRole("button", { name: "选择区域 2" }));
+    expect(screen.getByLabelText("字体")).toHaveValue('"Arial", "Noto Sans SC", sans-serif');
+    expect(screen.getByLabelText("字体颜色")).toHaveValue("#111111");
+    expect(screen.getByRole("checkbox", { name: "显示当前区域轮廓" })).toBeChecked();
+
+    await user.selectOptions(screen.getByLabelText("字体"), '"Courier New", "Noto Sans SC", monospace');
+    fireEvent.change(screen.getByLabelText("字体颜色"), {
+      target: { value: "#0000ff" },
+    });
+    await user.click(screen.getByRole("button", { name: "选择区域 1" }));
+
+    expect(screen.getByLabelText("字体")).toHaveValue('"Georgia", "Noto Serif SC", serif');
+    expect(screen.getByLabelText("字体颜色")).toHaveValue("#ff0000");
+    expect(screen.getByRole("checkbox", { name: "显示当前区域轮廓" })).not.toBeChecked();
   });
 });

@@ -127,7 +127,7 @@ export function renderDocument(
   for (const region of document.regions) {
     renderRegionFill(context, region);
     renderRegionText(context, region);
-    if (document.showContours) {
+    if (document.showContours && region.showContour !== false) {
       renderContour(context, region);
     }
     if (options.editorMode && options.selectedRegionId === region.id) {

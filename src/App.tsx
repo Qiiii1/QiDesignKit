@@ -128,6 +128,12 @@ export function App() {
           nextRegionDefaults={state.nextRegionDefaults}
           onDeleteRegion={() => dispatch({ type: "region/delete-selected" })}
           onPatch={patchSettings}
+          onSelectRegion={(regionId) => dispatch({
+            type: "selection/set",
+            regionId,
+          })}
+          regions={state.document.regions}
+          selectedRegionId={state.selectedRegionId}
           selectedRegion={selectedRegion}
         />
       </section>

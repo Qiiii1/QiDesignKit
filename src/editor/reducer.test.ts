@@ -32,11 +32,19 @@ describe("editor reducer", () => {
     state = editorReducer(state, { type: "selection/set", regionId: first.id });
     state = editorReducer(state, {
       type: "region/update",
-      patch: { color: "#ff0000" },
+      patch: {
+        color: "#ff0000",
+        fontFamily: '"Georgia", "Noto Serif SC", serif',
+        showContour: false,
+      },
     });
 
     expect(state.document.regions[0].color).toBe("#ff0000");
     expect(state.document.regions[1].color).not.toBe("#ff0000");
+    expect(state.document.regions[0].fontFamily).toContain("Georgia");
+    expect(state.document.regions[1].fontFamily).not.toContain("Georgia");
+    expect(state.document.regions[0].showContour).toBe(false);
+    expect(state.document.regions[1].showContour).toBe(true);
   });
 
   it("keeps at most fifty undo snapshots", () => {
