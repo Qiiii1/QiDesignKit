@@ -34,6 +34,17 @@ describe("polygon geometry", () => {
     expect(sampled.at(-1)).toEqual(mousePath.at(-1));
   });
 
+  it("uses a safe fallback when sampling with a non-finite limit", () => {
+    const mousePath = Array.from({ length: 101 }, (_, x) => ({ x, y: x * 2 }));
+
+    const sampled = samplePath(mousePath, Number.NaN);
+
+    expect(sampled.length).toBeGreaterThan(0);
+    expect(sampled.length).toBeLessThanOrEqual(48);
+    expect(sampled[0]).toEqual(mousePath[0]);
+    expect(sampled.at(-1)).toEqual(mousePath.at(-1));
+  });
+
   it("detects points inside a square and finds nearby nodes", () => {
     expect(pointInPolygon({ x: 50, y: 50 }, square)).toBe(true);
     expect(pointInPolygon({ x: 150, y: 50 }, square)).toBe(false);
@@ -53,6 +64,15 @@ describe("polygon geometry", () => {
       { x: 0, y: 0 },
     ])).toBe(false);
     expect(isUsablePolygon(square)).toBe(true);
+  });
+
+  it("rejects a triangle with a non-finite coordinate", () => {
+    expect(isUsablePolygon([
+      { x: 0, y: -100 },
+      { x: Number.POSITIVE_INFINITY, y: 0 },
+      { x: 0, y: 100 },
+      { x: -100, y: 0 },
+    ])).toBe(false);
   });
 
   it("calculates square area for an open polygon", () => {

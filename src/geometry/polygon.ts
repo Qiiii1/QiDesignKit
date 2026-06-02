@@ -26,7 +26,9 @@ export function closePath(points: Point[]): Point[] {
 }
 
 export function samplePath(points: Point[], maxPoints = 48): Point[] {
-  const limit = Math.max(2, Math.floor(maxPoints));
+  const limit = Number.isFinite(maxPoints)
+    ? Math.max(2, Math.floor(maxPoints))
+    : 48;
   if (points.length <= limit) {
     return [...points];
   }
@@ -53,11 +55,11 @@ export function polygonArea(points: Point[]): number {
 }
 
 export function isUsablePolygon(points: Point[]): boolean {
-  const distinctPoints = new Set(
-    points
-      .filter(isFinitePoint)
-      .map((point) => `${point.x},${point.y}`),
-  );
+  if (!points.every(isFinitePoint)) {
+    return false;
+  }
+
+  const distinctPoints = new Set(points.map((point) => `${point.x},${point.y}`));
   return distinctPoints.size >= 3 && polygonArea(points) >= 400;
 }
 
