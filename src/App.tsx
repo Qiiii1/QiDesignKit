@@ -5,7 +5,7 @@ export function App() {
         <h1>Verseform</h1>
         <button type="button">导出 PNG</button>
       </header>
-      <section className="editor-frame" aria-label="诗歌图片编辑器" />
+      <section className="editor-frame" aria-label="诗歌创作编辑器" />
     </main>
   );
 }
