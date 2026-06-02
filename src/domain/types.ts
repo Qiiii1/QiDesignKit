@@ -20,6 +20,7 @@ export interface TextRegion {
   padding: number;
   maxWords: number;
   color: string;
+  fillColor: string;
   repeatFill: boolean;
   contourColor: string;
   contourWidth: number;

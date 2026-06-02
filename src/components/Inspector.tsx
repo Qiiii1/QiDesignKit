@@ -12,6 +12,15 @@ type NumericStyleKey =
   | "maxWords"
   | "contourWidth";
 
+const REGION_FILL_PALETTE = [
+  { label: "透明底色", value: "transparent" },
+  { label: "雾粉底色", value: "#f3dfd3" },
+  { label: "麦芽底色", value: "#eadbbd" },
+  { label: "鼠尾草底色", value: "#d7dfcf" },
+  { label: "雾蓝底色", value: "#d8e2e7" },
+  { label: "丁香底色", value: "#e2dcea" },
+] as const;
+
 interface InspectorProps {
   nextRegionDefaults: RegionSettings;
   selectedRegion?: TextRegion;
@@ -66,6 +75,7 @@ export function Inspector({
 }: InspectorProps) {
   const [activeTab, setActiveTab] = useState<"poetry" | "region">("poetry");
   const settings = selectedRegion ?? nextRegionDefaults;
+  const fillColor = settings.fillColor ?? "transparent";
   const disabled = selectedRegion === undefined;
   const updateNumber = (key: NumericStyleKey) => (value: number) => {
     onPatch({ [key]: value });
@@ -146,19 +156,19 @@ export function Inspector({
               ))}
             </select>
           </label>
-          {settings.poetrySource === "custom" ? (
-            <label className="field">
-              <span>诗歌文本</span>
-              <textarea
-                aria-label="诗歌文本"
-                onChange={(event) => onPatch({ text: event.target.value })}
-                rows={10}
-                value={settings.text}
-              />
-            </label>
-          ) : (
-            <blockquote>{settings.text}</blockquote>
-          )}
+          <label className="field">
+            <span>填充文本</span>
+            <textarea
+              aria-label="诗歌文本"
+              onChange={(event) => onPatch({
+                poemId: undefined,
+                poetrySource: "custom",
+                text: event.target.value,
+              })}
+              rows={8}
+              value={settings.text}
+            />
+          </label>
           <div className="inspector-note">
             中英文可以混合使用。英文按单词排布，中文按字排布。
           </div>
@@ -211,6 +221,38 @@ export function Inspector({
               <input disabled={disabled} onChange={(event) => onPatch({ contourColor: event.target.value })} type="color" value={settings.contourColor} />
             </label>
           </div>
+          <div className="field">
+            <span>区域底色</span>
+            <div className="region-palette" aria-label="区域底色预设">
+              {REGION_FILL_PALETTE.map((preset) => (
+                <button
+                  aria-label={preset.label}
+                  aria-pressed={fillColor === preset.value}
+                  className={`palette-swatch${preset.value === "transparent" ? " palette-swatch--transparent" : ""}`}
+                  disabled={disabled}
+                  key={preset.value}
+                  onClick={() => onPatch({ fillColor: preset.value })}
+                  style={{
+                    backgroundColor: preset.value === "transparent"
+                      ? "#ffffff"
+                      : preset.value,
+                  }}
+                  title={preset.label}
+                  type="button"
+                />
+              ))}
+            </div>
+          </div>
+          <label className="color-field region-custom-color">
+            <span>自定义底色</span>
+            <input
+              aria-label="区域底色自定义颜色"
+              disabled={disabled}
+              onChange={(event) => onPatch({ fillColor: event.target.value })}
+              type="color"
+              value={fillColor === "transparent" ? "#f3dfd3" : fillColor}
+            />
+          </label>
           <NumberField disabled={disabled} label="轮廓粗细" min={0.5} onChange={updateNumber("contourWidth")} step={0.5} value={settings.contourWidth} />
           <label className="check-field">
             <input

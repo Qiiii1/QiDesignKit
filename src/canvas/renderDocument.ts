@@ -34,6 +34,9 @@ function renderRegionText(
   context.fillStyle = region.color;
   context.font = `${region.fontWeight} ${region.fontSize}px ${region.fontFamily}`;
   context.textBaseline = "alphabetic";
+  if (tracePolygon(context, region.points)) {
+    context.clip();
+  }
 
   const units = prepareTextUnits(
     region.text,
@@ -51,6 +54,22 @@ function renderRegionText(
 
   for (const placement of placements) {
     context.fillText(placement.text, placement.x, placement.y);
+  }
+  context.restore();
+}
+
+function renderRegionFill(
+  context: CanvasRenderingContext2D,
+  region: TextRegion,
+): void {
+  if (!region.fillColor || region.fillColor === "transparent") {
+    return;
+  }
+
+  context.save();
+  context.fillStyle = region.fillColor;
+  if (tracePolygon(context, region.points)) {
+    context.fill();
   }
   context.restore();
 }
@@ -106,6 +125,7 @@ export function renderDocument(
   );
 
   for (const region of document.regions) {
+    renderRegionFill(context, region);
     renderRegionText(context, region);
     if (document.showContours) {
       renderContour(context, region);

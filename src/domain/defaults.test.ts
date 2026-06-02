@@ -27,8 +27,11 @@ describe("domain defaults", () => {
     expect(sourcePoints[0].x).toBe(0);
     expect(region.writingMode).toBe("horizontal");
     expect(region.fontWeight).toBe(700);
-    expect(region.lineSpacing).toBe(-4);
-    expect(region.letterSpacing).toBe(-2);
+    expect(region.lineSpacing).toBe(-8);
+    expect(region.letterSpacing).toBe(-4);
+    expect(region.padding).toBe(4);
+    expect(region.maxWords).toBe(1200);
+    expect(region.fillColor).toBe("transparent");
     expect(region.repeatFill).toBe(true);
   });
 });

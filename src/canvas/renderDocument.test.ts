@@ -15,9 +15,10 @@ function createRecordingContext(calls: string[]) {
     moveTo: vi.fn(),
     lineTo: vi.fn(),
     closePath: vi.fn(),
+    clip: () => calls.push("clip"),
     stroke: () => calls.push("contour"),
     arc: () => calls.push("node"),
-    fill: vi.fn(),
+    fill: () => calls.push("region-fill"),
     fillText: () => calls.push("text"),
     measureText: (text: string) => ({ width: text.length * 10 }),
   } as unknown as CanvasRenderingContext2D;
@@ -41,6 +42,8 @@ describe("renderDocument", () => {
     );
 
     expect(calls.indexOf("background")).toBeLessThan(calls.indexOf("text"));
+    expect(calls).toContain("clip");
+    expect(calls.indexOf("clip")).toBeLessThan(calls.indexOf("text"));
     expect(calls.indexOf("text")).toBeLessThan(calls.indexOf("contour"));
     expect(calls).toContain("node");
   });
@@ -61,6 +64,27 @@ describe("renderDocument", () => {
     );
 
     expect(calls).not.toContain("contour");
+  });
+
+  it("draws an optional region fill before clipped text", () => {
+    const calls: string[] = [];
+    const context = createRecordingContext(calls);
+    const region = createDefaultRegion([
+      { x: 0, y: 0 },
+      { x: 240, y: 0 },
+      { x: 240, y: 240 },
+      { x: 0, y: 240 },
+    ], { fillColor: "#f3dfd3", padding: 0, fontSize: 20 });
+
+    renderDocument(
+      context,
+      { ...createDefaultDocument(), regions: [region] },
+      { scale: 1, editorMode: false },
+    );
+
+    expect(calls).toContain("region-fill");
+    expect(calls.indexOf("region-fill")).toBeLessThan(calls.indexOf("clip"));
+    expect(calls.indexOf("clip")).toBeLessThan(calls.indexOf("text"));
   });
 
   it("omits selected nodes outside editor mode", () => {

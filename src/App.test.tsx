@@ -38,9 +38,13 @@ describe("App editor workflow", () => {
 
     expect(screen.getByRole("option", { name: "静夜思 · 李白" }))
       .toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "自定义文本" }));
+    const textInput = screen.getByLabelText("诗歌文本");
+    await user.clear(textInput);
+    await user.type(textInput, "海风吹过自己的句子");
 
-    expect(screen.getByLabelText("诗歌文本")).toBeInTheDocument();
+    expect(textInput).toHaveValue("海风吹过自己的句子");
+    expect(screen.getByRole("button", { name: "自定义文本" }))
+      .toHaveAttribute("aria-pressed", "true");
   });
 
   it("restores the locally saved document after initialization", async () => {
@@ -84,8 +88,11 @@ describe("App editor workflow", () => {
     fireEvent.mouseMove(canvas, { clientX: 10, clientY: 210 });
     fireEvent.mouseUp(canvas);
     await user.click(screen.getByRole("tab", { name: "区域" }));
+    await user.click(screen.getByRole("button", { name: "雾粉底色" }));
 
     expect(screen.getByLabelText("字号")).toBeEnabled();
-    expect(screen.getByLabelText("字距")).toHaveValue(-2);
+    expect(screen.getByLabelText("字距")).toHaveValue(-4);
+    expect(screen.getByRole("button", { name: "雾粉底色" }))
+      .toHaveAttribute("aria-pressed", "true");
   });
 });

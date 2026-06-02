@@ -155,6 +155,27 @@ h1 { font-family: Georgia, "Noto Serif SC", serif; font-size: 20px; font-weight:
 .color-field input[type="color"] { background: transparent; border: 0; height: 32px; padding: 0; width: 38px; }
 .color-field--dark { margin-left: 4px; }
 .color-field--dark input[type="color"] { height: 26px; width: 30px; }
+.region-palette { display: flex; flex-wrap: wrap; gap: 8px; }
+.palette-swatch {
+  border: 1px solid rgba(41, 39, 32, 0.16);
+  border-radius: 50%;
+  height: 27px;
+  position: relative;
+  width: 27px;
+}
+.palette-swatch:hover { border-color: var(--terracotta); transform: translateY(-1px); }
+.palette-swatch[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--panel), 0 0 0 4px var(--terracotta); }
+.palette-swatch--transparent::after {
+  background: #c2775a;
+  content: "";
+  height: 1px;
+  left: 4px;
+  position: absolute;
+  top: 12px;
+  transform: rotate(-45deg);
+  width: 17px;
+}
+.region-custom-color { margin: 2px 0 14px; }
 blockquote {
   background: #efeae1;
   border-left: 2px solid var(--terracotta);

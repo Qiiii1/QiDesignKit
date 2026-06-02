@@ -121,7 +121,8 @@ function layoutHorizontalText(
       && scanlineIndex < MAX_SCANLINE_ITERATIONS;
     scanlineIndex += 1
   ) {
-    for (const segment of getHorizontalSegments(polygon, y)) {
+    const glyphCenterlineY = y - options.fontSize / 2;
+    for (const segment of getHorizontalSegments(polygon, glyphCenterlineY)) {
       let x = segment.start + options.padding;
       const end = segment.end - options.padding;
 
@@ -134,17 +135,7 @@ function layoutHorizontalText(
           continue;
         }
 
-        if (
-          x + width > end
-          || !glyphBoxFitsInPolygon(
-            polygon,
-            x,
-            y,
-            width,
-            options.fontSize,
-            options.padding,
-          )
-        ) {
+        if (x + width > end) {
           break;
         }
 

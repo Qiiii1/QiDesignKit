@@ -121,7 +121,7 @@ describe("polygon text layout", () => {
     ).toEqual([{ text: "明", x: 0, y: 10 }]);
   });
 
-  it("rejects horizontal glyph boxes that leak outside a narrowing polygon", () => {
+  it("uses clipped later scanlines to fill narrowing polygons", () => {
     const wideningTriangle = [
       { x: 10, y: 0 },
       { x: 20, y: 20 },
@@ -130,7 +130,23 @@ describe("polygon text layout", () => {
 
     expect(
       layoutTextInPolygon(wideningTriangle, ["明"], createOptions()),
-    ).toEqual([]);
+    ).toEqual([{ text: "明", x: 2.5, y: 20 }]);
+  });
+
+  it("fills tapered shoulders when the glyph centerline fits", () => {
+    const triangle = [
+      { x: 15, y: 0 },
+      { x: 30, y: 20 },
+      { x: 0, y: 20 },
+    ];
+
+    expect(
+      layoutTextInPolygon(
+        triangle,
+        ["明"],
+        createOptions({ measure: () => 5 }),
+      ),
+    ).toEqual([{ text: "明", x: 11.25, y: 10 }]);
   });
 
   it("moves wide vertical words left until their glyph box fits", () => {

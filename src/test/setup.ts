@@ -15,7 +15,7 @@ Object.defineProperty(HTMLCanvasElement.prototype, "getContext", {
   value: vi.fn(() => ({
     save: vi.fn(), restore: vi.fn(), scale: vi.fn(), clearRect: vi.fn(), fillRect: vi.fn(),
     beginPath: vi.fn(), moveTo: vi.fn(), lineTo: vi.fn(), closePath: vi.fn(),
-    stroke: vi.fn(), arc: vi.fn(), fill: vi.fn(), fillText: vi.fn(),
+    clip: vi.fn(), stroke: vi.fn(), arc: vi.fn(), fill: vi.fn(), fillText: vi.fn(),
     measureText: (text: string) => ({ width: text.length * 10 }),
   })),
 });
