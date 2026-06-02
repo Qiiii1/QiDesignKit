@@ -6,6 +6,10 @@ select regions to adjust their typography, text color, optional region color,
 and contour visibility independently, undo recent changes, and export an
 original-size PNG.
 
+## Online
+
+[Open Visual Text Tool](https://qiiii1.github.io/verseform/)
+
 ## Run locally
 
 ```bash
