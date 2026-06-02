@@ -83,6 +83,7 @@ Use these scripts and dependencies:
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^4.5.2",
+    "@vitest/coverage-v8": "^3.2.4",
     "fake-indexeddb": "^6.0.1",
     "jsdom": "^26.1.0",
     "typescript": "~5.8.3",
@@ -151,7 +152,10 @@ Create `src/test/setup.ts`:
 ```ts
 import "@testing-library/jest-dom/vitest";
 import "fake-indexeddb/auto";
-import { vi } from "vitest";
+import { cleanup } from "@testing-library/react";
+import { afterEach, vi } from "vitest";
+
+afterEach(cleanup);
 
 class ResizeObserverStub {
   observe() {}
