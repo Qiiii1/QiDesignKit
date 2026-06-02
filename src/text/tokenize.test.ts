@@ -22,12 +22,30 @@ describe("text tokenization", () => {
     ]);
   });
 
+  it("keeps collapsed whitespace as an uncharged layout gap", () => {
+    expect(prepareTextUnits("Hope   is", 2, false)).toEqual([
+      { text: "Hope", tokenCost: 1 },
+      { text: " ", tokenCost: 0 },
+      { text: "is", tokenCost: 1 },
+    ]);
+  });
+
   it("cycles full display units until repeat fill reaches its charged limit", () => {
     expect(prepareTextUnits("明月，", 3, true)).toEqual([
       { text: "明", tokenCost: 1 },
       { text: "月", tokenCost: 1 },
       { text: "，", tokenCost: 0 },
       { text: "明", tokenCost: 1 },
+    ]);
+  });
+
+  it("separates repeated Latin reading words at the cycle boundary", () => {
+    expect(prepareTextUnits("Hope is", 3, true)).toEqual([
+      { text: "Hope", tokenCost: 1 },
+      { text: " ", tokenCost: 0 },
+      { text: "is", tokenCost: 1 },
+      { text: " ", tokenCost: 0 },
+      { text: "Hope", tokenCost: 1 },
     ]);
   });
 

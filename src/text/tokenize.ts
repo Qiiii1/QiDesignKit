@@ -10,6 +10,13 @@ const HAN_CHARACTER = /^\p{Script=Han}/u;
 const LETTER_OR_NUMBER = /^[\p{L}\p{N}]/u;
 const WHITESPACE = /^\s+$/u;
 
+function needsCycleGap(unit?: TextUnit): boolean {
+  return unit !== undefined
+    && unit.tokenCost === 1
+    && LETTER_OR_NUMBER.test(unit.text)
+    && !HAN_CHARACTER.test(unit.text);
+}
+
 function tokenizeDisplayUnits(text: string): TextUnit[] {
   const units: TextUnit[] = [];
   let word = "";
@@ -29,7 +36,12 @@ function tokenizeDisplayUnits(text: string): TextUnit[] {
       word += grapheme;
     } else {
       appendWord();
-      if (!WHITESPACE.test(grapheme)) {
+      if (WHITESPACE.test(grapheme)) {
+        const previousUnit = units.at(-1);
+        if (previousUnit !== undefined && previousUnit.text !== " ") {
+          units.push({ text: " ", tokenCost: 0 });
+        }
+      } else {
         units.push({ text: grapheme, tokenCost: 0 });
       }
     }
@@ -68,6 +80,14 @@ export function prepareTextUnits(
     let index = 0;
 
     while (chargedWords < wordLimit) {
+      if (
+        index > 0
+        && index % units.length === 0
+        && needsCycleGap(repeatedUnits.at(-1))
+        && needsCycleGap(units[0])
+      ) {
+        repeatedUnits.push({ text: " ", tokenCost: 0 });
+      }
       const unit = units[index % units.length];
       repeatedUnits.push(unit);
       chargedWords += unit.tokenCost;

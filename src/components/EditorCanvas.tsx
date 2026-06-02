@@ -83,14 +83,19 @@ export function EditorCanvas({
       return;
     }
 
+    const updateStageSize = (width: number, height: number) => {
+      if (width > 0 && height > 0) {
+        setStageSize({ width, height });
+      }
+    };
+    const rectangle = stage.getBoundingClientRect();
+    updateStageSize(rectangle.width, rectangle.height);
+
     const resizeObserver = new ResizeObserver(([entry]) => {
       if (entry === undefined) {
         return;
       }
-      setStageSize({
-        width: Math.max(1, entry.contentRect.width),
-        height: Math.max(1, entry.contentRect.height),
-      });
+      updateStageSize(entry.contentRect.width, entry.contentRect.height);
     });
     resizeObserver.observe(stage);
     return () => resizeObserver.disconnect();
