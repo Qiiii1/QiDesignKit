@@ -2,7 +2,7 @@
 
 ## Product Summary
 
-Verseform is a desktop-first, browser-local image editor for creating poetic text compositions. A user uploads an image or creates a solid-color canvas, draws one or more freeform regions with the mouse, and fills each closed region with Chinese or English poetry. The result can be exported as a PNG without requiring an account or server.
+Verseform is a desktop-first, browser-local image editor for creating poetic text compositions. A user defines a solid-color canvas, draws one or more freeform regions with the mouse, and densely fills each closed region with Chinese or English poetry. The result can be exported as a PNG without requiring an account or server.
 
 The first version is a single-page web application. Project state remains on the user's device and is restored after a refresh.
 
@@ -10,7 +10,6 @@ The first version is a single-page web application. Project state remains on the
 
 ### Included
 
-- Upload an image and preserve its original dimensions.
 - Create a solid-color canvas with user-defined width, height, and color.
 - Draw freeform paths with the mouse and automatically close them when the mouse is released.
 - Create multiple text regions.
@@ -30,6 +29,7 @@ The first version is a single-page web application. Project state remains on the
 - Canvas pan and zoom controls.
 - Advanced layer management.
 - Vector export formats.
+- Uploaded image backgrounds.
 
 ## User Experience
 
@@ -55,7 +55,7 @@ The `Poetry` tab lets users choose an included poem or enter custom text. When a
 
 ### Canvas Setup
 
-When an image is uploaded, the editor stores and exports the artwork at the source image's original dimensions. When a solid-color canvas is selected, the user defines width, height, and background color. Solid-color dimensions accept integer values from `64` to `4096` pixels per side. The editor scales the on-screen representation to fit the workspace without changing document coordinates.
+The user defines the solid-color canvas width, height, and background color. Dimensions accept integer values from `64` to `4096` pixels per side. The editor scales the on-screen representation to fit the workspace without changing document coordinates.
 
 ### Region Creation And Editing
 
@@ -89,6 +89,8 @@ Each region independently stores:
 
 The global contour visibility toggle determines whether all contours are drawn. Contours are visible by default in both the editor and exported PNG. Selection handles and editing nodes never appear in exported images.
 
+Line spacing and letter spacing accept negative values so a user can create tightly packed or deliberately overlapping mixed-language compositions. This supports poster-like text sculpture rather than only conventional paragraph layout. The layout engine clamps forward progress to at least one document pixel so extreme values cannot stall rendering.
+
 ### Text Counting And Fill Rules
 
 The maximum word count uses reading-oriented tokens:
@@ -99,7 +101,7 @@ The maximum word count uses reading-oriented tokens:
 
 When repeat fill is enabled, the selected poem repeats until the available region space is filled or the configured maximum token count is reached. When repeat fill is disabled, the poem is laid out once and stops even when unused space remains.
 
-Horizontal text flows left to right and top to bottom. Vertical text flows top to bottom and then proceeds from right to left.
+Horizontal text flows left to right and top to bottom. Vertical text flows top to bottom and then proceeds from right to left. Text is packed against the available scanline segments inside the region so irregular contours read as dense typographic shapes.
 
 ### Undo
 
@@ -116,7 +118,7 @@ The first version provides undo only; redo is out of scope. The editor keeps the
 
 ### Persistence
 
-The application saves project state locally and restores it after refresh. It uses IndexedDB for both structured project state and uploaded image blobs so image size is not constrained by `localStorage`.
+The application saves structured project state locally in IndexedDB and restores it after refresh.
 
 If local persistence fails, editing remains available for the current session and the interface informs the user that automatic saving is unavailable.
 
@@ -124,7 +126,7 @@ If local persistence fails, editing remains available for the current session an
 
 Export creates an offscreen canvas using the document's original dimensions. It draws:
 
-1. The uploaded image or solid-color background.
+1. The solid-color background.
 2. Filled text for each region.
 3. Region contours when global contour visibility is enabled.
 
@@ -148,7 +150,7 @@ Owns the application layout and coordinates UI state:
 
 Renders the document in a deterministic order:
 
-1. Background image or solid color.
+1. Solid-color background.
 2. Region text.
 3. Region contours when visible.
 4. Selected-region highlight and contour nodes in editor mode only.
@@ -193,11 +195,10 @@ interface Point {
 }
 
 interface CanvasBackground {
-  kind: "solid" | "image";
+  kind: "solid";
   width: number;
   height: number;
   color: string;
-  imageBlobId?: string;
 }
 
 interface TextRegion {
@@ -231,7 +232,6 @@ The selected region, active tool, transient draw path, node drag state, notices,
 
 ## Error Handling
 
-- Reject unsupported or unreadable uploaded images with a clear notice.
 - Constrain solid-canvas dimensions to integer values from `64` to `4096` pixels per side.
 - Ignore paths that cannot create a usable region.
 - Allow deleting the current region without a confirmation dialog because undo is immediately available.
@@ -252,7 +252,7 @@ The selected region, active tool, transient draw path, node drag state, notices,
 
 ### Component Tests
 
-- Upload an image and switch to a solid-color canvas.
+- Modify solid-color canvas dimensions and background color.
 - Create and select multiple regions.
 - Modify one region without changing another.
 - Delete a selected region and undo the deletion.
@@ -265,7 +265,7 @@ The selected region, active tool, transient draw path, node drag state, notices,
 - Assign independent horizontal and vertical styles.
 - Toggle contours and confirm the editor preview changes.
 - Export PNG with and without contours.
-- Confirm exported dimensions match the original image or configured solid canvas.
+- Confirm exported dimensions match the configured solid canvas.
 - Refresh and confirm that the current project returns.
 
 ## Delivery

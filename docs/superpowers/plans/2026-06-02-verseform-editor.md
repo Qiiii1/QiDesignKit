@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build a desktop-first, browser-local React image editor where users draw freeform regions, fill them with configurable Chinese or English poetry, undo edits, restore work after refresh, and export an original-size PNG.
+**Goal:** Build a desktop-first, browser-local React image editor where users draw freeform regions on a solid-color canvas, densely fill them with configurable Chinese or English poetry, undo edits, restore work after refresh, and export an original-size PNG.
 
-**Architecture:** Keep document behavior in pure TypeScript modules and keep Canvas 2D as a deterministic rendering adapter. React owns editor-session state and UI composition, while IndexedDB persists the active project and uploaded image blob. Use one renderer for both the scaled editor preview and scale-`1` PNG export so exported output cannot drift from the editor model.
+**Architecture:** Keep document behavior in pure TypeScript modules and keep Canvas 2D as a deterministic rendering adapter. React owns editor-session state and UI composition, while IndexedDB persists the active project. Use one renderer for both the scaled editor preview and scale-`1` PNG export so exported output cannot drift from the editor model.
 
 **Tech Stack:** React 19, Vite, TypeScript, Canvas 2D, IndexedDB, Vitest, Testing Library, `fake-indexeddb`, browser acceptance through the in-app Browser plugin.
 
@@ -29,10 +29,10 @@ src/geometry/polygon.ts            path closing, sampling, hit testing, scanline
 src/text/tokenize.ts               reading-oriented Chinese and English tokenization
 src/text/layout.ts                 horizontal and vertical polygon text layout
 src/editor/reducer.ts              document mutations and bounded undo stack
-src/storage/projectStore.ts        IndexedDB document and blob persistence
+src/storage/projectStore.ts        IndexedDB document persistence
 src/canvas/renderDocument.ts       preview and export drawing pipeline
 src/canvas/exportPng.ts            original-size PNG generation and download
-src/components/TopBar.tsx          canvas setup, upload, undo, contour toggle, export
+src/components/TopBar.tsx          solid-canvas setup, undo, contour toggle, export
 src/components/ToolRail.tsx        select and draw tool controls
 src/components/EditorCanvas.tsx    canvas lifecycle and mouse interactions
 src/components/Inspector.tsx       poetry and selected-region controls
@@ -163,7 +163,7 @@ vi.stubGlobal("ResizeObserver", ResizeObserverStub);
 Object.defineProperty(HTMLCanvasElement.prototype, "getContext", {
   value: vi.fn(() => ({
     save: vi.fn(), restore: vi.fn(), scale: vi.fn(), clearRect: vi.fn(), fillRect: vi.fn(),
-    drawImage: vi.fn(), beginPath: vi.fn(), moveTo: vi.fn(), lineTo: vi.fn(), closePath: vi.fn(),
+    beginPath: vi.fn(), moveTo: vi.fn(), lineTo: vi.fn(), closePath: vi.fn(),
     stroke: vi.fn(), arc: vi.fn(), fill: vi.fn(), fillText: vi.fn(),
     measureText: (text: string) => ({ width: text.length * 10 }),
   })),
@@ -215,7 +215,7 @@ export function App() {
         <h1>Verseform</h1>
         <button type="button">导出 PNG</button>
       </header>
-      <section className="editor-frame" aria-label="诗歌图片编辑器" />
+      <section className="editor-frame" aria-label="诗歌创作编辑器" />
     </main>
   );
 }
@@ -326,9 +326,7 @@ export type EditorTool = "select" | "draw";
 export type PoetrySource = "library" | "custom";
 
 export interface Point { x: number; y: number; }
-export interface SolidBackground { kind: "solid"; width: number; height: number; color: string; }
-export interface ImageBackground { kind: "image"; width: number; height: number; color: string; imageBlobId: string; }
-export type CanvasBackground = SolidBackground | ImageBackground;
+export interface CanvasBackground { kind: "solid"; width: number; height: number; color: string; }
 
 export interface TextRegion {
   id: string;
@@ -627,6 +625,16 @@ describe("polygon text layout", () => {
     expect(placed[0].y).toBeLessThan(placed[1].y);
     expect(placed.at(-1)!.x).toBeLessThan(placed[0].x);
   });
+
+  it("supports negative spacing for dense text sculpture without stalling", () => {
+    const loose = layoutTextInPolygon(square, ["a", "b", "c"], {
+      mode: "horizontal", fontSize: 20, lineSpacing: 4, letterSpacing: 4, padding: 10, measure,
+    });
+    const dense = layoutTextInPolygon(square, ["a", "b", "c"], {
+      mode: "horizontal", fontSize: 20, lineSpacing: -8, letterSpacing: -6, padding: 10, measure,
+    });
+    expect(dense[1].x - dense[0].x).toBeLessThan(loose[1].x - loose[0].x);
+  });
 });
 ```
 
@@ -661,7 +669,7 @@ export function layoutTextInPolygon(
 ): PlacedText[];
 ```
 
-For horizontal layout, walk `y` from top bounds plus padding in `fontSize + lineSpacing` increments, get horizontal polygon segments, trim each end by padding, and place units while their measured width fits. For vertical layout, walk `x` from right bounds minus padding toward the left in `fontSize + lineSpacing` increments, get vertical segments, trim each end by padding, and place units downward in `fontSize + letterSpacing` increments.
+For horizontal layout, walk `y` from top bounds plus padding in `Math.max(1, fontSize + lineSpacing)` increments, get horizontal polygon segments, trim each end by padding, and place units while their measured width fits. Advance `x` by `Math.max(1, measuredWidth + letterSpacing)`. For vertical layout, walk `x` from right bounds minus padding toward the left in `Math.max(1, fontSize + lineSpacing)` increments, get vertical segments, trim each end by padding, and place units downward in `Math.max(1, fontSize + letterSpacing)` increments. The minimum step preserves deliberate overlap while preventing an infinite loop.
 
 - [ ] **Step 7: Run all text tests**
 
@@ -782,7 +790,7 @@ git add src/editor
 git commit -m "feat: add editor state and bounded undo"
 ```
 
-## Task 6: Persist Project State And Image Blobs In IndexedDB
+## Task 6: Persist Project State In IndexedDB
 
 **Files:**
 - Create: `src/storage/projectStore.ts`
@@ -795,7 +803,7 @@ Create `src/storage/projectStore.test.ts`:
 ```ts
 import { beforeEach, describe, expect, it } from "vitest";
 import { createDefaultDocument } from "../domain/defaults";
-import { deleteDatabase, loadProject, loadStoredImage, saveProject, saveStoredImage } from "./projectStore";
+import { deleteDatabase, loadProject, saveProject } from "./projectStore";
 
 describe("project store", () => {
   beforeEach(async () => deleteDatabase());
@@ -804,12 +812,6 @@ describe("project store", () => {
     const document = { ...createDefaultDocument(), showContours: false };
     await saveProject({ document, history: [createDefaultDocument()] });
     expect(await loadProject()).toEqual({ document, history: [createDefaultDocument()] });
-  });
-
-  it("stores uploaded image blobs separately", async () => {
-    const blob = new Blob(["image"], { type: "image/png" });
-    await saveStoredImage("source-image", blob);
-    expect(await loadStoredImage("source-image")).toEqual(blob);
   });
 });
 ```
@@ -822,7 +824,7 @@ Expected: FAIL because `src/storage/projectStore.ts` does not exist.
 
 - [ ] **Step 3: Implement IndexedDB storage**
 
-Create `src/storage/projectStore.ts`. Use database `verseform`, version `1`, object stores `project` and `images`, and active-project key `active`. Export:
+Create `src/storage/projectStore.ts`. Use database `verseform`, version `1`, object store `project`, and active-project key `active`. Export:
 
 ```ts
 export interface PersistedProject {
@@ -832,8 +834,6 @@ export interface PersistedProject {
 
 export async function saveProject(project: PersistedProject): Promise<void>;
 export async function loadProject(): Promise<PersistedProject | undefined>;
-export async function saveStoredImage(id: string, blob: Blob): Promise<void>;
-export async function loadStoredImage(id: string): Promise<Blob | undefined>;
 export async function deleteDatabase(): Promise<void>;
 ```
 
@@ -923,7 +923,6 @@ export interface RenderOptions {
   scale: number;
   editorMode: boolean;
   selectedRegionId?: string;
-  image?: CanvasImageSource;
 }
 
 export function renderDocument(
@@ -933,7 +932,7 @@ export function renderDocument(
 ): void;
 ```
 
-Scale once at the start. Draw a solid background with `fillRect` or the uploaded source image with `drawImage`. For each region, set `context.font`, create units with `prepareTextUnits`, place them with `layoutTextInPolygon`, and call `fillText`. Draw contours only when `document.showContours` is true. Draw the selected contour nodes only in editor mode.
+Scale once at the start. Draw the solid background with `fillRect`. For each region, set `context.font`, create units with `prepareTextUnits`, place them with `layoutTextInPolygon`, and call `fillText`. Draw contours only when `document.showContours` is true. Draw the selected contour nodes only in editor mode.
 
 - [ ] **Step 4: Write failing export-size test**
 
@@ -968,7 +967,6 @@ Create `src/canvas/exportPng.ts` with:
 
 ```ts
 export interface ExportDependencies {
-  image?: CanvasImageSource;
   createCanvas?: () => HTMLCanvasElement;
   download?: (blob: Blob, filename: string) => void;
 }
@@ -1051,7 +1049,6 @@ interface EditorCanvasProps {
   document: EditorDocument;
   tool: EditorTool;
   selectedRegionId?: string;
-  image?: CanvasImageSource;
   onAddRegion: (points: Point[]) => void;
   onSelectRegion?: (regionId?: string) => void;
   onMoveNode?: (regionId: string, nodeIndex: number, point: Point) => void;
@@ -1073,7 +1070,7 @@ git add src/components/EditorCanvas.tsx src/components/EditorCanvas.test.tsx src
 git commit -m "feat: add freeform canvas interactions"
 ```
 
-## Task 9: Build Editor Chrome, Inspector Controls, Upload, And Persistence Wiring
+## Task 9: Build Editor Chrome, Inspector Controls, And Persistence Wiring
 
 **Files:**
 - Create: `src/components/TopBar.tsx`
@@ -1091,7 +1088,7 @@ Extend `src/App.test.tsx`:
 ```tsx
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { App } from "./App";
 import { createDefaultDocument } from "./domain/defaults";
 import { deleteDatabase, saveProject } from "./storage/projectStore";
@@ -1119,14 +1116,6 @@ describe("App editor workflow", () => {
     expect(screen.getByRole("option", { name: "静夜思 · 李白" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "自定义文本" }));
     expect(screen.getByLabelText("诗歌文本")).toBeInTheDocument();
-  });
-
-  it("uses the uploaded image's original dimensions", async () => {
-    const user = userEvent.setup();
-    vi.stubGlobal("createImageBitmap", vi.fn(async () => ({ width: 800, height: 600, close: vi.fn() })));
-    render(<App />);
-    await user.upload(screen.getByLabelText("上传图片"), new File(["image"], "scene.png", { type: "image/png" }));
-    expect(await screen.findByText("800 × 600 px")).toBeInTheDocument();
   });
 
   it("restores the locally saved document after initialization", async () => {
@@ -1162,9 +1151,9 @@ export function ToolRail({ tool, onToolChange }: { tool: EditorTool; onToolChang
 }
 ```
 
-Implement `TopBar.tsx` with image upload, solid-color width/height/color inputs, undo, contour visibility, and export controls. Validate dimensions with `validateCanvasDimension`. Accept only files whose MIME type starts with `image/`. Read an uploaded image with `createImageBitmap`, save its blob using `saveStoredImage`, and emit an image background containing original dimensions and the blob ID. Catch unreadable images and emit the notice `无法读取这张图片，请选择有效的图片文件。`
+Implement `TopBar.tsx` with solid-color width/height/color inputs, undo, contour visibility, and export controls. Validate dimensions with `validateCanvasDimension`.
 
-Implement `Inspector.tsx` with `Poetry` and `Region` tabs. The poetry tab lists `POEMS`, supports a custom-text mode, and applies changes to the selected region or next-region defaults. The region tab exposes writing mode, font family, font size, font weight, line spacing, letter spacing, padding, maximum words, font color, repeat fill, contour color, contour width, and delete controls. Disable region controls when no region is selected.
+Implement `Inspector.tsx` with `Poetry` and `Region` tabs. The poetry tab lists `POEMS`, supports a custom-text mode, and applies changes to the selected region or next-region defaults. The region tab exposes writing mode, font family, font size, font weight, line spacing, letter spacing, padding, maximum words, font color, repeat fill, contour color, contour width, and delete controls. Allow negative line-spacing and letter-spacing values so users can create dense or deliberately overlapping text sculpture. Disable region controls when no region is selected.
 
 Implement `Notice.tsx` as an `aria-live="polite"` message strip.
 
@@ -1172,7 +1161,7 @@ Implement `Notice.tsx` as an `aria-live="polite"` message strip.
 
 Use `useReducer(editorReducer, undefined, () => createEditorState(createDefaultDocument()))`. Load a persisted project once on mount and dispatch `project/hydrate` with its document and history. Track an `initialized` flag and do not save until the first load attempt completes, preventing the default document from overwriting restored work. Save `{ document, history }` after a `300ms` debounce. If persistence rejects, dispatch a notice that says `自动保存不可用，本次编辑仍可继续。`
 
-On region creation, call `createDefaultRegion(points, nextRegionDefaults)`, dispatch `region/add`, and select the new region. Load an uploaded image blob from IndexedDB and convert it to an object URL-backed `HTMLImageElement` for preview and export. Revoke old object URLs during cleanup. Catch PNG export rejection and dispatch `导出失败，请重试。` without mutating the active project.
+On region creation, call `createDefaultRegion(points, nextRegionDefaults)`, dispatch `region/add`, and select the new region. Catch PNG export rejection and dispatch `导出失败，请重试。` without mutating the active project.
 
 Compose:
 
@@ -1235,7 +1224,7 @@ Create `README.md` with:
 ````md
 # Verseform
 
-Verseform is a browser-local poetry image editor. Upload an image or choose a solid canvas, draw freeform regions, fill each region with included or custom poetry, adjust the typography and contour, undo recent changes, and export an original-size PNG.
+Verseform is a browser-local poetry image editor. Choose a solid-color canvas, draw freeform regions, densely fill each region with included or custom poetry, adjust the typography and contour, undo recent changes, and export an original-size PNG.
 
 ## Run locally
 
@@ -1253,7 +1242,7 @@ npm run build
 
 ## Storage
 
-The active project and uploaded image blob are saved in IndexedDB in the current browser. Verseform does not upload artwork to a server.
+The active project is saved in IndexedDB in the current browser. Verseform does not upload artwork to a server.
 ````
 
 - [ ] **Step 3: Run all automated verification**

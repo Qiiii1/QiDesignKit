@@ -12,6 +12,7 @@
 - Compact left rail with selection and drawing tools only.
 - Large central canvas as the dominant surface.
 - Right inspector around `320px` wide with `诗歌` and `区域` tabs.
+- Solid-color canvas with one or more irregular text-sculpture regions.
 - No marketing copy, card grid, floating dashboard widgets, or decorative badges.
 
 ## Locked Colors
@@ -30,12 +31,12 @@
 - UI chrome and inspector controls: clean sans-serif.
 - Inspector labels remain compact but readable.
 - Buttons and inputs receive deliberate font sizing; do not rely on browser defaults.
+- Mixed Chinese and English text may be tightly packed or deliberately overlap when negative spacing is selected.
 
 ## Allowed Top-Bar Copy
 
 - `VERSEFORM`
-- `上传图片`
-- `纯色画布`
+- `画布设置`
 - `撤销`
 - `隐藏轮廓` or `显示轮廓`
 - `导出 PNG`
@@ -44,7 +45,6 @@
 
 - Selection: simple cursor arrow, filled or optically strong outline.
 - Drawing: pen nib or pencil metaphor.
-- Upload: upward arrow into a tray.
 - Undo: curved left arrow.
 - Contour visibility: eye or crossed-eye.
 - Export: downward arrow into a tray.
@@ -59,3 +59,4 @@ Use a consistent, compact SVG treatment with balanced stroke widths and `current
 3. Terracotta marks active states and primary actions without overwhelming the artwork.
 4. The right inspector fits all typography controls without clipping or accidental wrapping.
 5. Canvas text, contour, and nodes remain visually distinct.
+6. Default artwork reads as a typographic shape on a solid background, not a paragraph over a photo.
