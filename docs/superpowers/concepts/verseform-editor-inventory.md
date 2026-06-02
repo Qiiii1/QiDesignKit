@@ -33,6 +33,18 @@
 - Buttons and inputs receive deliberate font sizing; do not rely on browser defaults.
 - Mixed Chinese and English text may be tightly packed or deliberately overlap when negative spacing is selected.
 
+## Default Artwork
+
+- Canvas background: `#ffffff`
+- Text color: `#111111`
+- Contour color: `#111111`
+- Font weight: `700`
+- Font size: `28`
+- Line spacing: `-4`
+- Letter spacing: `-2`
+- Inner padding: `12`
+- Maximum words: `300`
+
 ## Allowed Top-Bar Copy
 
 - `VERSEFORM`

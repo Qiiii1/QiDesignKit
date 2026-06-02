@@ -287,7 +287,7 @@ import { createDefaultDocument, createDefaultRegion, validateCanvasDimension } f
 describe("domain defaults", () => {
   it("starts with a visible-contour solid canvas", () => {
     expect(createDefaultDocument()).toMatchObject({
-      background: { kind: "solid", width: 1200, height: 1200, color: "#d9c7ae" },
+      background: { kind: "solid", width: 1200, height: 1200, color: "#ffffff" },
       regions: [],
       showContours: true,
     });
@@ -309,6 +309,9 @@ describe("domain defaults", () => {
     first.points[0].x = 999;
     expect(second.points[0].x).toBe(0);
     expect(first.writingMode).toBe("horizontal");
+    expect(first.fontWeight).toBe(700);
+    expect(first.lineSpacing).toBe(-4);
+    expect(first.letterSpacing).toBe(-2);
     expect(first.repeatFill).toBe(true);
   });
 });
@@ -386,17 +389,17 @@ export const DEFAULT_REGION_STYLE: Omit<TextRegion, "id" | "points"> = {
   poemId: POEMS[0].id,
   text: POEMS[0].text,
   writingMode: "horizontal",
-  fontFamily: '"Noto Serif SC", "Songti SC", serif',
+  fontFamily: '"Arial", "Noto Sans SC", sans-serif',
   fontSize: 28,
-  fontWeight: 400,
-  lineSpacing: 10,
-  letterSpacing: 2,
-  padding: 16,
-  maxWords: 160,
-  color: "#f8f1e7",
+  fontWeight: 700,
+  lineSpacing: -4,
+  letterSpacing: -2,
+  padding: 12,
+  maxWords: 300,
+  color: "#111111",
   repeatFill: true,
-  contourColor: "#fffaf2",
-  contourWidth: 2,
+  contourColor: "#111111",
+  contourWidth: 1.5,
 };
 
 export function validateCanvasDimension(value: string): boolean {
@@ -406,7 +409,7 @@ export function validateCanvasDimension(value: string): boolean {
 
 export function createDefaultDocument(): EditorDocument {
   return {
-    background: { kind: "solid", width: 1200, height: 1200, color: "#d9c7ae" },
+    background: { kind: "solid", width: 1200, height: 1200, color: "#ffffff" },
     regions: [],
     showContours: true,
   };

@@ -57,6 +57,8 @@ The `Poetry` tab lets users choose an included poem or enter custom text. When a
 
 The user defines the solid-color canvas width, height, and background color. Dimensions accept integer values from `64` to `4096` pixels per side. The editor scales the on-screen representation to fit the workspace without changing document coordinates.
 
+The initial document is a `1200 × 1200` white canvas. New regions start with bold near-black text, a thin near-black contour, and slightly negative line and letter spacing to communicate the text-sculpture direction immediately.
+
 ### Region Creation And Editing
 
 1. The user selects the drawing tool.
