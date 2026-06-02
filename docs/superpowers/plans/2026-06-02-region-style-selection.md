@@ -49,4 +49,4 @@
 - [x] Run `npm run build`.
 - [x] Run `git diff --check`.
 - [x] Reload `http://127.0.0.1:4174/`, switch between two regions, and confirm typography, color, and contour controls retain independent values without console errors.
-- [ ] Commit, fast-forward `main`, and push to GitHub.
+- [x] Commit, fast-forward `main`, and push to GitHub.
