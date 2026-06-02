@@ -51,4 +51,4 @@
 - [x] Run `npm run build`.
 - [x] Run `git diff --check`.
 - [x] Reload `http://127.0.0.1:4174/` and confirm the neutral interface, preset text, custom text, and region contour controls.
-- [ ] Commit, fast-forward `main`, and push to GitHub.
+- [x] Commit, fast-forward `main`, and push to GitHub.
