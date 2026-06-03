@@ -6,6 +6,12 @@ export default defineConfig({
   plugins: [react()],
   test: {
     environment: "jsdom",
+    exclude: [
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/.worktrees/**",
+      "**/coverage/**",
+    ],
     setupFiles: ["./src/test/setup.ts"],
   },
 });
