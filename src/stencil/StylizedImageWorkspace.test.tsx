@@ -64,6 +64,10 @@ describe("StylizedImageWorkspace", () => {
     const user = userEvent.setup();
     render(<StylizedImageWorkspace onBack={vi.fn()} />);
 
+    expect(screen.getByLabelText("视觉模式")).toHaveValue("diffusion");
+    expect(screen.getByLabelText("扩散强度")).toBeInTheDocument();
+    expect(screen.queryByLabelText("纹理类型")).not.toBeInTheDocument();
+
     fireEvent.change(screen.getByLabelText("前景色"), {
       target: { value: "#ff0000" },
     });
@@ -74,13 +78,64 @@ describe("StylizedImageWorkspace", () => {
     fireEvent.change(screen.getByLabelText("阈值"), {
       target: { value: "180" },
     });
+    fireEvent.change(screen.getByLabelText("扩散强度"), {
+      target: { value: "0.9" },
+    });
+    fireEvent.change(screen.getByLabelText("线条间距"), {
+      target: { value: "18" },
+    });
+    fireEvent.change(screen.getByLabelText("线宽"), {
+      target: { value: "3" },
+    });
+    fireEvent.change(screen.getByLabelText("点阵密度"), {
+      target: { value: "0.7" },
+    });
+    fireEvent.change(screen.getByLabelText("生长进度"), {
+      target: { value: "0.6" },
+    });
+
+    await user.selectOptions(screen.getByLabelText("视觉模式"), "stencil");
     await user.selectOptions(screen.getByLabelText("纹理类型"), "lines");
 
     expect(screen.getByLabelText("前景色")).toHaveValue("#ff0000");
     expect(screen.getByLabelText("背景模式")).toHaveValue("custom");
     expect(screen.getByLabelText("背景色")).toHaveValue("#123456");
     expect(screen.getByLabelText("阈值")).toHaveValue("180");
+    expect(screen.getByLabelText("视觉模式")).toHaveValue("stencil");
     expect(screen.getByLabelText("纹理类型")).toHaveValue("lines");
+  });
+
+  it("switches between diffusion and stencil-only controls", async () => {
+    const user = userEvent.setup();
+    render(<StylizedImageWorkspace onBack={vi.fn()} />);
+
+    expect(screen.getByLabelText("扩散强度")).toBeInTheDocument();
+    expect(screen.queryByLabelText("纹理密度")).not.toBeInTheDocument();
+
+    await user.selectOptions(screen.getByLabelText("视觉模式"), "stencil");
+
+    expect(screen.getByLabelText("纹理密度")).toBeInTheDocument();
+    expect(screen.queryByLabelText("扩散强度")).not.toBeInTheDocument();
+
+    await user.selectOptions(screen.getByLabelText("视觉模式"), "diffusion");
+
+    expect(screen.getByLabelText("扩散强度")).toBeInTheDocument();
+    expect(screen.queryByLabelText("纹理密度")).not.toBeInTheDocument();
+  });
+
+  it("exports with the selected visual mode settings", async () => {
+    const user = userEvent.setup();
+    render(<StylizedImageWorkspace onBack={vi.fn()} />);
+
+    await user.upload(screen.getByLabelText("选择图片文件"), makeImageFile());
+    await user.selectOptions(screen.getByLabelText("视觉模式"), "stencil");
+    await user.click(await screen.findByRole("button", { name: "导出 PNG" }));
+
+    expect(exportMocks.exportStencilPng).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ visualMode: "stencil" }),
+      expect.any(Number),
+    );
   });
 
   it("shows unsupported MP4 notice without leaving the workspace", async () => {

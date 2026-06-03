@@ -69,6 +69,7 @@ export function StylizedImageWorkspace({ onBack }: StylizedImageWorkspaceProps) 
   const patchNumber = (key: NumericSetting) => (value: number) => {
     patch({ [key]: value } as Partial<StencilSettings>);
   };
+  const isDiffusionMode = settings.visualMode === "diffusion";
 
   useEffect(() => {
     if (!playing) {
@@ -236,11 +237,24 @@ export function StylizedImageWorkspace({ onBack }: StylizedImageWorkspaceProps) 
 
         <aside className="inspector stencil-inspector" aria-label="镂空图像参数">
           <div className="inspector-heading">
-            <span className="eyebrow">Stencil</span>
+            <span className="eyebrow">Visual Transform</span>
             <h2>视觉参数</h2>
-            <p>用阈值、纹理与负空间把图片压成单色图形。</p>
+            <p>把图片转成单色线稿、镂空模板或海报化图形。</p>
           </div>
           <section className="inspector-panel">
+            <label className="field">
+              <span>视觉模式</span>
+              <select
+                aria-label="视觉模式"
+                onChange={(event) => patch({
+                  visualMode: event.target.value as StencilSettings["visualMode"],
+                })}
+                value={settings.visualMode}
+              >
+                <option value="diffusion">扩散线稿</option>
+                <option value="stencil">镂空模板</option>
+              </select>
+            </label>
             <label className="color-field">
               <span>前景色</span>
               <input
@@ -289,43 +303,90 @@ export function StylizedImageWorkspace({ onBack }: StylizedImageWorkspaceProps) 
               />
               反转明暗选择
             </label>
-            <label className="field">
-              <span>纹理类型</span>
-              <select
-                aria-label="纹理类型"
-                onChange={(event) => patch({
-                  textureType: event.target.value as StencilSettings["textureType"],
-                })}
-                value={settings.textureType}
-              >
-                <option value="holes">孔洞</option>
-                <option value="lines">流线</option>
-                <option value="mixed">混合</option>
-              </select>
-            </label>
-            <NumberRange
-              label="纹理密度"
-              max={1}
-              min={0}
-              onChange={patchNumber("textureDensity")}
-              step={0.01}
-              value={settings.textureDensity}
-            />
-            <NumberRange
-              label="纹理尺度"
-              max={120}
-              min={4}
-              onChange={patchNumber("textureScale")}
-              value={settings.textureScale}
-            />
-            <NumberRange
-              label="边缘强调"
-              max={1}
-              min={0}
-              onChange={patchNumber("edgeEmphasis")}
-              step={0.01}
-              value={settings.edgeEmphasis}
-            />
+            {isDiffusionMode ? (
+              <>
+                <NumberRange
+                  label="扩散强度"
+                  max={1}
+                  min={0}
+                  onChange={patchNumber("diffusionStrength")}
+                  step={0.01}
+                  value={settings.diffusionStrength}
+                />
+                <NumberRange
+                  label="线条间距"
+                  max={40}
+                  min={4}
+                  onChange={patchNumber("diffusionLineSpacing")}
+                  step={1}
+                  value={settings.diffusionLineSpacing}
+                />
+                <NumberRange
+                  label="线宽"
+                  max={8}
+                  min={0.5}
+                  onChange={patchNumber("diffusionLineWidth")}
+                  step={0.1}
+                  value={settings.diffusionLineWidth}
+                />
+                <NumberRange
+                  label="点阵密度"
+                  max={1}
+                  min={0}
+                  onChange={patchNumber("diffusionDotDensity")}
+                  step={0.01}
+                  value={settings.diffusionDotDensity}
+                />
+                <NumberRange
+                  label="生长进度"
+                  max={1}
+                  min={0}
+                  onChange={patchNumber("diffusionGrowth")}
+                  step={0.01}
+                  value={settings.diffusionGrowth}
+                />
+              </>
+            ) : (
+              <>
+                <label className="field">
+                  <span>纹理类型</span>
+                  <select
+                    aria-label="纹理类型"
+                    onChange={(event) => patch({
+                      textureType: event.target.value as StencilSettings["textureType"],
+                    })}
+                    value={settings.textureType}
+                  >
+                    <option value="holes">孔洞</option>
+                    <option value="lines">流线</option>
+                    <option value="mixed">混合</option>
+                  </select>
+                </label>
+                <NumberRange
+                  label="纹理密度"
+                  max={1}
+                  min={0}
+                  onChange={patchNumber("textureDensity")}
+                  step={0.01}
+                  value={settings.textureDensity}
+                />
+                <NumberRange
+                  label="纹理尺度"
+                  max={120}
+                  min={4}
+                  onChange={patchNumber("textureScale")}
+                  value={settings.textureScale}
+                />
+                <NumberRange
+                  label="边缘强调"
+                  max={1}
+                  min={0}
+                  onChange={patchNumber("edgeEmphasis")}
+                  step={0.01}
+                  value={settings.edgeEmphasis}
+                />
+              </>
+            )}
           </section>
 
           <div className="inspector-heading inspector-heading--sub">
