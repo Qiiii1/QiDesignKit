@@ -289,7 +289,11 @@ blockquote {
 }
 .notice--visible { opacity: 1; transform: translate(-50%, 0); }
 
-.stencil-shell { background: var(--paper); min-height: 100vh; }
+.stencil-shell {
+  background: var(--paper);
+  min-height: 100vh;
+  overflow: hidden;
+}
 .stencil-top-bar {
   align-items: center;
   background: var(--ink);
@@ -297,11 +301,83 @@ blockquote {
   display: flex;
   gap: 18px;
   height: 76px;
+  justify-content: space-between;
   padding: 0 22px;
 }
 .stencil-top-bar h1 {
+  flex: 1;
   font-family: Georgia, "Noto Serif SC", serif;
   font-size: 22px;
   font-weight: 500;
   margin: 0;
+}
+.stencil-frame {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  height: calc(100vh - 76px);
+}
+.stencil-preview {
+  align-items: center;
+  background: #ded8cd;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  justify-content: center;
+  min-width: 0;
+  padding: 34px;
+}
+.stencil-preview canvas {
+  background: #fff;
+  box-shadow: var(--canvas-shadow);
+  max-height: calc(100vh - 170px);
+  max-width: 100%;
+}
+.stencil-empty-state {
+  align-items: center;
+  background: var(--panel-bright);
+  border: 1px dashed #b8afa2;
+  border-radius: 22px;
+  color: var(--ink);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  justify-content: center;
+  min-height: 360px;
+  width: min(620px, 90%);
+}
+.stencil-empty-state span {
+  font-family: Georgia, "Noto Serif SC", serif;
+  font-size: 28px;
+}
+.stencil-empty-state small { color: var(--muted); }
+.stencil-playbar {
+  align-items: center;
+  color: var(--muted);
+  display: flex;
+  font-size: 12px;
+  gap: 10px;
+}
+.stencil-playbar button {
+  background: var(--panel-bright);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  color: var(--ink);
+  padding: 8px 12px;
+}
+.stencil-inspector { height: calc(100vh - 76px); }
+.inspector-heading--sub { padding-bottom: 8px; }
+.inspector-heading--sub h2 { font-size: 18px; }
+.range-field { display: grid; grid-template-columns: 1fr auto; }
+.range-field input { grid-column: 1 / -1; }
+.range-field output {
+  color: var(--terracotta-dark);
+  font-size: 11px;
+  font-weight: 800;
+}
+.visually-hidden {
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
 }
