@@ -11,9 +11,41 @@ import {
 describe("App editor workflow", () => {
   beforeEach(async () => deleteDatabase());
 
+  it("opens on an effect selection page and enters the text workspace", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    expect(screen.getByRole("heading", { name: "选择视觉效果" }))
+      .toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /文字区域填充/ }))
+      .toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /镂空图像转换/ }))
+      .toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /文字区域填充/ }));
+
+    expect(screen.getByLabelText("视觉文字效果编辑器")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "返回效果选择" }));
+    expect(screen.getByRole("heading", { name: "选择视觉效果" }))
+      .toBeInTheDocument();
+  });
+
+  it("enters the stencil workspace from the selection page", async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: /镂空图像转换/ }));
+
+    expect(screen.getByRole("heading", { name: "镂空图像转换" }))
+      .toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "返回效果选择" }))
+      .toBeInTheDocument();
+  });
+
   it("switches tools and changes solid canvas dimensions without a global contour toggle", async () => {
     const user = userEvent.setup();
     render(<App />);
+    await user.click(screen.getByRole("button", { name: /文字区域填充/ }));
 
     await user.click(screen.getByRole("button", { name: "选择" }));
     expect(screen.getByRole("button", { name: "选择" }))
@@ -37,6 +69,7 @@ describe("App editor workflow", () => {
   it("uses neutral text labels while exposing presets and custom text", async () => {
     const user = userEvent.setup();
     render(<App />);
+    await user.click(screen.getByRole("button", { name: /文字区域填充/ }));
 
     expect(screen.getByRole("option", { name: "静夜思 · 李白" }))
       .toBeInTheDocument();
@@ -69,6 +102,7 @@ describe("App editor workflow", () => {
     });
 
     render(<App />);
+    await userEvent.click(await screen.findByRole("button", { name: /文字区域填充/ }));
 
     expect(await screen.findByText("640 × 960 px")).toBeInTheDocument();
   });
@@ -76,6 +110,7 @@ describe("App editor workflow", () => {
   it("undoes document edits from the top bar", async () => {
     const user = userEvent.setup();
     render(<App />);
+    await user.click(screen.getByRole("button", { name: /文字区域填充/ }));
 
     fireEvent.change(screen.getByLabelText("画布宽度"), {
       target: { value: "640" },
@@ -88,6 +123,7 @@ describe("App editor workflow", () => {
   it("enables region typography controls after drawing a usable shape", async () => {
     const user = userEvent.setup();
     render(<App />);
+    await user.click(screen.getByRole("button", { name: /文字区域填充/ }));
     const canvas = screen.getByLabelText("创作画布");
 
     fireEvent.mouseDown(canvas, { clientX: 10, clientY: 10 });
@@ -122,6 +158,7 @@ describe("App editor workflow", () => {
     const user = userEvent.setup();
     render(<App />);
 
+    await user.click(screen.getByRole("button", { name: /文字区域填充/ }));
     await user.click(await screen.findByRole("button", { name: "选择区域 1" }));
     await user.click(screen.getByRole("tab", { name: "区域" }));
     await user.selectOptions(screen.getByLabelText("字体"), '"Georgia", "Noto Serif SC", serif');

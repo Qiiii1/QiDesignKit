@@ -5,6 +5,7 @@ import type { CanvasBackground } from "../domain/types";
 interface TopBarProps {
   background: CanvasBackground;
   canUndo: boolean;
+  onBack?: () => void;
   onBackgroundChange: (background: CanvasBackground) => void;
   onExport: () => void;
   onUndo: () => void;
@@ -13,6 +14,7 @@ interface TopBarProps {
 export function TopBar({
   background,
   canUndo,
+  onBack,
   onBackgroundChange,
   onExport,
   onUndo,
@@ -40,6 +42,11 @@ export function TopBar({
 
   return (
     <header className="top-bar">
+      {onBack === undefined ? null : (
+        <button className="back-button" onClick={onBack} type="button">
+          返回效果选择
+        </button>
+      )}
       <div className="canvas-settings" aria-label="画布设置">
         <span className="eyebrow">画布</span>
         <label>

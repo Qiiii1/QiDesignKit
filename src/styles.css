@@ -22,6 +22,73 @@ button, input, select, textarea { font: inherit; }
 button { cursor: pointer; }
 button:disabled { cursor: not-allowed; opacity: 0.48; }
 
+.selection-shell {
+  align-items: center;
+  background: var(--paper);
+  display: flex;
+  min-height: 100vh;
+  padding: 44px;
+}
+.selection-panel {
+  margin: 0 auto;
+  max-width: 980px;
+  width: 100%;
+}
+.selection-heading h1 {
+  font-family: Georgia, "Noto Serif SC", serif;
+  font-size: 46px;
+  font-weight: 500;
+  margin: 8px 0 12px;
+}
+.selection-heading p { color: var(--muted); font-size: 15px; }
+.effect-card-grid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 34px;
+}
+.effect-card {
+  background: var(--panel-bright);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  color: var(--ink);
+  display: grid;
+  gap: 14px;
+  min-height: 240px;
+  padding: 28px;
+  text-align: left;
+}
+.effect-card:hover {
+  border-color: var(--terracotta);
+  box-shadow: var(--canvas-shadow);
+  transform: translateY(-2px);
+}
+.effect-card__index {
+  color: var(--terracotta-dark);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+.effect-card__title {
+  font-family: Georgia, "Noto Serif SC", serif;
+  font-size: 30px;
+}
+.effect-card__description {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.7;
+  max-width: 320px;
+}
+.back-button {
+  background: transparent;
+  border: 1px solid rgba(247, 243, 236, 0.22);
+  border-radius: 7px;
+  color: inherit;
+  font-size: 12px;
+  padding: 9px 12px;
+}
+.back-button:hover { background: rgba(255, 255, 255, 0.08); }
+
 .app-shell { min-height: 100vh; overflow: hidden; background: var(--paper); }
 .top-bar {
   align-items: center;
@@ -221,3 +288,20 @@ blockquote {
   transition: 180ms ease;
 }
 .notice--visible { opacity: 1; transform: translate(-50%, 0); }
+
+.stencil-shell { background: var(--paper); min-height: 100vh; }
+.stencil-top-bar {
+  align-items: center;
+  background: var(--ink);
+  color: #f7f3ec;
+  display: flex;
+  gap: 18px;
+  height: 76px;
+  padding: 0 22px;
+}
+.stencil-top-bar h1 {
+  font-family: Georgia, "Noto Serif SC", serif;
+  font-size: 22px;
+  font-weight: 500;
+  margin: 0;
+}

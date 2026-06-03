@@ -1,141 +1,24 @@
-import { useEffect, useReducer, useState } from "react";
-import { exportDocumentPng } from "./canvas/exportPng";
-import { EditorCanvas } from "./components/EditorCanvas";
-import { Inspector } from "./components/Inspector";
-import { Notice } from "./components/Notice";
-import { ToolRail } from "./components/ToolRail";
-import { TopBar } from "./components/TopBar";
-import {
-  createDefaultDocument,
-  createDefaultRegion,
-} from "./domain/defaults";
-import type { Point, TextRegion } from "./domain/types";
-import { createEditorState, editorReducer } from "./editor/reducer";
-import { loadProject, saveProject } from "./storage/projectStore";
+import { useState } from "react";
+import { EffectSelection } from "./components/EffectSelection";
+import { TextWorkspace } from "./components/TextWorkspace";
+import { StylizedImageWorkspace } from "./stencil/StylizedImageWorkspace";
 
-const AUTOSAVE_DELAY = 300;
+type Workspace = "home" | "text" | "stencil";
 
 export function App() {
-  const [state, dispatch] = useReducer(
-    editorReducer,
-    undefined,
-    () => createEditorState(createDefaultDocument()),
-  );
-  const [initialized, setInitialized] = useState(false);
-  const selectedRegion = state.document.regions.find(
-    ({ id }) => id === state.selectedRegionId,
-  );
+  const [workspace, setWorkspace] = useState<Workspace>("home");
 
-  useEffect(() => {
-    let active = true;
-    loadProject()
-      .then((project) => {
-        if (active && project !== undefined) {
-          dispatch({ type: "project/hydrate", ...project });
-        }
-      })
-      .catch(() => {
-        if (active) {
-          dispatch({
-            type: "notice/set",
-            notice: "自动保存不可用，本次编辑仍可继续。",
-          });
-        }
-      })
-      .finally(() => {
-        if (active) {
-          setInitialized(true);
-        }
-      });
+  if (workspace === "text") {
+    return <TextWorkspace onBack={() => setWorkspace("home")} />;
+  }
 
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!initialized) {
-      return;
-    }
-
-    const timeout = window.setTimeout(() => {
-      saveProject({
-        document: state.document,
-        history: state.history,
-      }).catch(() => dispatch({
-        type: "notice/set",
-        notice: "自动保存不可用，本次编辑仍可继续。",
-      }));
-    }, AUTOSAVE_DELAY);
-
-    return () => window.clearTimeout(timeout);
-  }, [initialized, state.document, state.history]);
-
-  const patchSettings = (
-    patch: Partial<Omit<TextRegion, "id" | "points">>,
-  ) => {
-    dispatch(selectedRegion === undefined
-      ? { type: "defaults/update", patch }
-      : { type: "region/update", patch });
-  };
-  const addRegion = (points: Point[]) => {
-    dispatch({
-      type: "region/add",
-      region: createDefaultRegion(points, state.nextRegionDefaults),
-    });
-  };
-  const exportPng = () => {
-    exportDocumentPng(state.document).catch(() => dispatch({
-      type: "notice/set",
-      notice: "导出失败，请重试。",
-    }));
-  };
+  if (workspace === "stencil") {
+    return <StylizedImageWorkspace onBack={() => setWorkspace("home")} />;
+  }
 
   return (
-    <main className="app-shell">
-      <TopBar
-        background={state.document.background}
-        canUndo={state.history.length > 0}
-        onBackgroundChange={(background) => dispatch({
-          type: "background/set",
-          background,
-        })}
-        onExport={exportPng}
-        onUndo={() => dispatch({ type: "history/undo" })}
-      />
-      <section className="editor-frame" aria-label="视觉文字效果编辑器">
-        <ToolRail
-          onToolChange={(tool) => dispatch({ type: "tool/set", tool })}
-          tool={state.tool}
-        />
-        <EditorCanvas
-          document={state.document}
-          onAddRegion={addRegion}
-          onMoveNode={(regionId, nodeIndex, point) => {
-            dispatch({ type: "selection/set", regionId });
-            dispatch({ type: "region/move-node", nodeIndex, point });
-          }}
-          onSelectRegion={(regionId) => dispatch({
-            type: "selection/set",
-            regionId,
-          })}
-          selectedRegionId={state.selectedRegionId}
-          tool={state.tool}
-        />
-        <Inspector
-          nextRegionDefaults={state.nextRegionDefaults}
-          onDeleteRegion={() => dispatch({ type: "region/delete-selected" })}
-          onPatch={patchSettings}
-          onSelectRegion={(regionId) => dispatch({
-            type: "selection/set",
-            regionId,
-          })}
-          regions={state.document.regions}
-          selectedRegionId={state.selectedRegionId}
-          selectedRegion={selectedRegion}
-        />
-      </section>
-      <Notice message={state.notice} />
-    </main>
+    <EffectSelection
+      onSelect={(selectedWorkspace) => setWorkspace(selectedWorkspace)}
+    />
   );
 }
