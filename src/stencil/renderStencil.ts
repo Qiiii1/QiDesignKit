@@ -126,6 +126,68 @@ function lineField(x: number, y: number, time: number, scale: number): number {
   return 1 - wave;
 }
 
+function dotField(x: number, y: number, time: number, scale: number): number {
+  const cellSize = Math.max(3, scale * 0.42);
+  const shiftedX = x + time * cellSize * 0.62;
+  const shiftedY = y - time * cellSize * 0.38;
+  const cellX = Math.floor(shiftedX / cellSize);
+  const cellY = Math.floor(shiftedY / cellSize);
+  const offsetX = hash2d(cellX, cellY, 1) - 0.5;
+  const offsetY = hash2d(cellX, cellY, 2) - 0.5;
+  const centerX = (cellX + 0.5 + offsetX * 0.56) * cellSize;
+  const centerY = (cellY + 0.5 + offsetY * 0.56) * cellSize;
+  const radius = cellSize * (0.12 + hash2d(cellX, cellY, 3) * 0.2);
+  const distance = Math.hypot(shiftedX - centerX, shiftedY - centerY);
+
+  return distance <= radius ? 1 : hash2d(cellX, cellY, 4) * 0.42;
+}
+
+function grainField(x: number, y: number, time: number, scale: number): number {
+  const grainSize = Math.max(1, Math.round(scale / 18));
+  const gx = Math.floor((x + time * scale * 1.7) / grainSize);
+  const gy = Math.floor((y - time * scale * 1.1) / grainSize);
+  const fine = hash2d(gx, gy);
+  const soft = waveNoise(x, y, time, Math.max(4, scale * 0.7));
+
+  return fine * 0.78 + soft * 0.22;
+}
+
+function contourField(x: number, y: number, time: number, scale: number): number {
+  const safeScale = Math.max(4, scale);
+  const warp = waveNoise(x + 31, y - 17, time * 0.45, safeScale * 0.85);
+  const phase = (x * 0.31 + y * 0.47) / safeScale
+    + warp * 1.65
+    + time * 0.22;
+  const contour = Math.abs(Math.sin(phase * Math.PI * 2));
+
+  return 1 - contour;
+}
+
+function meshField(x: number, y: number, time: number, scale: number): number {
+  const primary = lineField(x, y, time * 0.8, scale);
+  const secondary = lineField(x * 0.9, -y * 1.1, -time * 0.55, scale * 0.86);
+  const woven = waveNoise(x, y, time * 0.4, scale * 0.72);
+
+  return Math.max(primary, secondary) * 0.82 + woven * 0.18;
+}
+
+function crackField(x: number, y: number, time: number, scale: number): number {
+  const safeScale = Math.max(4, scale);
+  const branchA = 1 - Math.abs(Math.sin((
+    x * 0.88
+    + y * 0.24
+    + waveNoise(x, y, time * 0.7, safeScale * 0.7) * safeScale
+  ) / safeScale * Math.PI));
+  const branchB = 1 - Math.abs(Math.sin((
+    x * -0.36
+    + y * 0.94
+    + waveNoise(x + 53, y - 29, time * 0.54, safeScale) * safeScale * 0.8
+  ) / Math.max(4, safeScale * 1.35) * Math.PI));
+  const gate = waveNoise(x - 11, y + 7, time * 0.33, safeScale * 1.2);
+
+  return Math.max(branchA, branchB * 0.9) * (0.58 + gate * 0.42);
+}
+
 function shouldRemoveForTexture(
   x: number,
   y: number,
@@ -141,14 +203,28 @@ function shouldRemoveForTexture(
   const textureTime = settings.flowEnabled ? time * settings.flowSpeed : 0;
   const holes = waveNoise(x, y, textureTime, settings.textureScale);
   const lines = lineField(x, y, textureTime, settings.textureScale);
-  const mixed = settings.textureType === "holes"
+  const mixed = holes * 0.48
+    + lines * 0.28
+    + dotField(x, y, textureTime, settings.textureScale) * 0.12
+    + contourField(x, y, textureTime, settings.textureScale) * 0.12;
+  const texture = settings.textureType === "holes"
     ? holes
     : settings.textureType === "lines"
       ? lines
-      : holes * 0.58 + lines * 0.42;
+      : settings.textureType === "dots"
+        ? dotField(x, y, textureTime, settings.textureScale)
+        : settings.textureType === "grain"
+          ? grainField(x, y, textureTime, settings.textureScale)
+          : settings.textureType === "contours"
+            ? contourField(x, y, textureTime, settings.textureScale)
+            : settings.textureType === "mesh"
+              ? meshField(x, y, textureTime, settings.textureScale)
+              : settings.textureType === "cracks"
+                ? crackField(x, y, textureTime, settings.textureScale)
+                : mixed;
 
   const edgeAllowance = edge * clamp01(settings.edgeEmphasis) * 0.24;
-  return mixed > 1 - density * 0.72 - edgeAllowance;
+  return texture > 1 - density * 0.72 - edgeAllowance;
 }
 
 function writePixel(

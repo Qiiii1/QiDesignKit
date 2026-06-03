@@ -115,6 +115,11 @@ describe("StylizedImageWorkspace", () => {
     await user.selectOptions(screen.getByLabelText("视觉模式"), "stencil");
 
     expect(screen.getByLabelText("纹理密度")).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "点阵" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "颗粒" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "等高线" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "网格" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "裂纹" })).toBeInTheDocument();
     expect(screen.queryByLabelText("扩散强度")).not.toBeInTheDocument();
 
     await user.selectOptions(screen.getByLabelText("视觉模式"), "diffusion");

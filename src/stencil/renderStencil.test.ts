@@ -155,6 +155,41 @@ describe("renderStencilImageData", () => {
     expect(countOpaque(first)).not.toBe(countOpaque(second));
   });
 
+  it("supports a broader set of stencil texture types", () => {
+    const source = makeImageData(Array.from({ length: 1024 }, () => 30), 32);
+    const textureTypes = [
+      "holes",
+      "lines",
+      "mixed",
+      "dots",
+      "grain",
+      "contours",
+      "mesh",
+      "cracks",
+    ] as const;
+
+    const opaqueCounts = textureTypes.map((textureType) => {
+      const output = renderStencilImageData({
+        source,
+        settings: {
+          ...DEFAULT_STENCIL_SETTINGS,
+          visualMode: "stencil",
+          backgroundMode: "transparent",
+          breathingEnabled: false,
+          textureType,
+          textureDensity: 0.74,
+          textureScale: 18,
+        },
+        time: 0.35,
+      });
+
+      return countOpaque(output);
+    });
+
+    expect(opaqueCounts.every((count) => count > 0 && count < 1024)).toBe(true);
+    expect(new Set(opaqueCounts).size).toBeGreaterThan(4);
+  });
+
   it("renders a solid diffusion body with carved internal channels", () => {
     const source = makeImageData(Array.from({ length: 900 }, () => 60), 30);
     const settings = {

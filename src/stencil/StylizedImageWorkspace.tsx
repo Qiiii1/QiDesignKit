@@ -359,6 +359,11 @@ export function StylizedImageWorkspace({ onBack }: StylizedImageWorkspaceProps) 
                   >
                     <option value="holes">孔洞</option>
                     <option value="lines">流线</option>
+                    <option value="dots">点阵</option>
+                    <option value="grain">颗粒</option>
+                    <option value="contours">等高线</option>
+                    <option value="mesh">网格</option>
+                    <option value="cracks">裂纹</option>
                     <option value="mixed">混合</option>
                   </select>
                 </label>

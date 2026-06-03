@@ -1,5 +1,13 @@
 export type StencilBackgroundMode = "transparent" | "white" | "custom";
-export type StencilTextureType = "holes" | "lines" | "mixed";
+export type StencilTextureType =
+  | "holes"
+  | "lines"
+  | "mixed"
+  | "dots"
+  | "grain"
+  | "contours"
+  | "mesh"
+  | "cracks";
 export type StencilVisualMode = "diffusion" | "stencil";
 
 export interface StencilSettings {
