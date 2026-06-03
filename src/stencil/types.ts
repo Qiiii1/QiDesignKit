@@ -1,7 +1,9 @@
 export type StencilBackgroundMode = "transparent" | "white" | "custom";
 export type StencilTextureType = "holes" | "lines" | "mixed";
+export type StencilVisualMode = "diffusion" | "stencil";
 
 export interface StencilSettings {
+  visualMode: StencilVisualMode;
   foregroundColor: string;
   backgroundMode: StencilBackgroundMode;
   backgroundColor: string;
@@ -11,6 +13,11 @@ export interface StencilSettings {
   textureDensity: number;
   textureScale: number;
   edgeEmphasis: number;
+  diffusionStrength: number;
+  diffusionLineSpacing: number;
+  diffusionLineWidth: number;
+  diffusionDotDensity: number;
+  diffusionGrowth: number;
   flowEnabled: boolean;
   breathingEnabled: boolean;
   animationDuration: number;
