@@ -39,6 +39,17 @@ function getBackgroundColor(settings: StencilSettings): Rgba {
   return parseHexColor(settings.backgroundColor);
 }
 
+function mixColor(from: Rgba, to: Rgba, amount: number): Rgba {
+  const safeAmount = clamp01(amount);
+  const inverse = 1 - safeAmount;
+  return {
+    r: Math.round(from.r * inverse + to.r * safeAmount),
+    g: Math.round(from.g * inverse + to.g * safeAmount),
+    b: Math.round(from.b * inverse + to.b * safeAmount),
+    a: Math.round(from.a * inverse + to.a * safeAmount),
+  };
+}
+
 function luminance(data: Uint8ClampedArray, index: number): number {
   return data[index] * 0.2126
     + data[index + 1] * 0.7152
@@ -265,7 +276,64 @@ function hasDiffusionDot(
   return Math.hypot(shiftedX - centerX, shiftedY - centerY) <= radius;
 }
 
-function hasDiffusionLine(
+function diffusionLineBand(
+  source: ImageData,
+  x: number,
+  y: number,
+  timeOffset: number,
+  edge: number,
+  settings: StencilSettings,
+): number {
+  const spacing = Math.max(4, settings.diffusionLineSpacing);
+  const strength = clamp01(settings.diffusionStrength);
+  const direction = gradientDirection(
+    source.data,
+    source.width,
+    source.height,
+    x,
+    y,
+  );
+  const directional = (x * direction.x + y * direction.y) / spacing;
+  const secondary = (x * 0.34 + y * 0.86) / spacing;
+  const branch = (x * -0.82 + y * 0.29) / Math.max(4, spacing * 1.35);
+  const organic = waveNoise(
+    x + edge * spacing * 4.5,
+    y - edge * spacing * 2.6,
+    timeOffset,
+    Math.max(4, spacing * (1.55 - strength * 0.58)),
+  ) - 0.5;
+  const branchNoise = waveNoise(
+    x + 37,
+    y - 19,
+    timeOffset * 0.72,
+    Math.max(4, spacing * 0.86),
+  ) - 0.5;
+  const phase = directional * (0.78 + strength * 0.44)
+    + secondary * 0.32
+    + branch * branchNoise * strength * 0.9
+    + organic * strength * 3.4
+    + timeOffset * 0.85;
+
+  return Math.abs(Math.sin(phase * Math.PI));
+}
+
+function diffusionBranchBand(
+  x: number,
+  y: number,
+  timeOffset: number,
+  settings: StencilSettings,
+): number {
+  const spacing = Math.max(4, settings.diffusionLineSpacing);
+  const strength = clamp01(settings.diffusionStrength);
+  const phase = (
+    x * -0.66
+    + y * 1.04
+    + waveNoise(x, y, timeOffset * 0.55, spacing * 1.25) * spacing * strength
+  ) / Math.max(4, spacing * 1.46);
+  return Math.abs(Math.sin((phase + timeOffset * 0.42) * Math.PI));
+}
+
+function hasDiffusionChannel(
   source: ImageData,
   x: number,
   y: number,
@@ -276,29 +344,43 @@ function hasDiffusionLine(
   const spacing = Math.max(4, settings.diffusionLineSpacing);
   const lineWidth = Math.max(0.2, settings.diffusionLineWidth);
   const strength = clamp01(settings.diffusionStrength);
-  const direction = gradientDirection(
-    source.data,
-    source.width,
-    source.height,
-    x,
-    y,
+  const band = diffusionLineBand(source, x, y, timeOffset, edge, settings);
+  const branchBand = diffusionBranchBand(x, y, timeOffset, settings);
+  const channelThreshold = clamp01(
+    (lineWidth / spacing) * (0.82 + strength * 0.3) + edge * 0.12,
   );
-  const directional = (x * direction.x + y * direction.y) / spacing;
-  const secondary = (x * 0.38 + y * 0.91) / spacing;
-  const organic = waveNoise(
-    x + edge * spacing * 4,
-    y - edge * spacing * 2,
-    timeOffset,
-    Math.max(4, spacing * (1.5 - strength * 0.5)),
-  ) - 0.5;
-  const phase = directional * (0.76 + strength * 0.42)
-    + secondary * 0.34
-    + organic * strength * 3.1
-    + timeOffset * 0.8;
-  const band = Math.abs(Math.sin(phase * Math.PI));
-  const threshold = clamp01((lineWidth / spacing) * 1.18 + edge * 0.28);
+  const branchThreshold = channelThreshold * (0.52 + strength * 0.24);
+  const branchGate = waveNoise(
+    x + 11,
+    y - 23,
+    timeOffset * 0.8,
+    Math.max(4, spacing * 1.1),
+  ) > 0.52 - strength * 0.12;
 
-  return band <= threshold;
+  return band <= channelThreshold
+    || (branchGate && branchBand <= branchThreshold);
+}
+
+function hasDiffusionTrail(
+  source: ImageData,
+  x: number,
+  y: number,
+  timeOffset: number,
+  edge: number,
+  settings: StencilSettings,
+): boolean {
+  const spacing = Math.max(4, settings.diffusionLineSpacing);
+  const lineWidth = Math.max(0.2, settings.diffusionLineWidth);
+  const strength = clamp01(settings.diffusionStrength);
+  const band = diffusionLineBand(source, x, y, timeOffset, edge, settings);
+  const branchBand = diffusionBranchBand(x, y, timeOffset, settings);
+  const channelThreshold = clamp01(
+    (lineWidth / spacing) * (0.82 + strength * 0.3) + edge * 0.12,
+  );
+  const trailThreshold = clamp01(channelThreshold + 0.1 + strength * 0.08);
+  const branchTrailThreshold = clamp01(channelThreshold + 0.04 + strength * 0.07);
+
+  return band <= trailThreshold || branchBand <= branchTrailThreshold;
 }
 
 function renderDiffusionMode(
@@ -309,6 +391,9 @@ function renderDiffusionMode(
   const output = new ImageData(source.width, source.height);
   const foreground = parseHexColor(settings.foregroundColor);
   const background = getBackgroundColor(settings);
+  const trailColor = mixColor(background.a === 0
+    ? { ...foreground, a: 0 }
+    : background, foreground, 0.28);
   const threshold = getAnimatedThreshold(settings, time);
   const timeOffset = settings.flowEnabled ? time * settings.flowSpeed : 0;
   const growth = getDiffusionGrowth(settings, time);
@@ -318,32 +403,41 @@ function renderDiffusionMode(
       const index = (y * source.width + x) * 4;
       const selected = source.data[index + 3] > 8
         && isSelected(source, index, threshold, settings);
-      if (!selected || !isRevealedByGrowth(
+      if (!selected) {
+        writePixel(output.data, index, background);
+        continue;
+      }
+
+      const edge = edgeStrength(source.data, source.width, source.height, x, y);
+      const revealed = isRevealedByGrowth(
         x,
         y,
         source.width,
         source.height,
         growth,
         settings,
-      )) {
-        writePixel(output.data, index, background);
+      );
+      if (!revealed) {
+        writePixel(output.data, index, foreground);
         continue;
       }
 
-      const edge = edgeStrength(source.data, source.width, source.height, x, y);
-      const line = hasDiffusionLine(source, x, y, timeOffset, edge, settings);
+      const channel = hasDiffusionChannel(source, x, y, timeOffset, edge, settings);
       const dot = hasDiffusionDot(x, y, timeOffset, edge, settings);
-      const edgeTrace = edge > 0.2 && waveNoise(
-        x,
-        y,
-        timeOffset,
-        Math.max(5, settings.diffusionLineSpacing),
-      ) > 0.44;
+      const stableEdge = edge > 0.36;
+      const trail = !stableEdge
+        && !channel
+        && !dot
+        && hasDiffusionTrail(source, x, y, timeOffset, edge, settings);
 
       writePixel(
         output.data,
         index,
-        line || dot || edgeTrace ? foreground : background,
+        !stableEdge && (channel || dot)
+          ? background
+          : trail
+            ? trailColor
+            : foreground,
       );
     }
   }

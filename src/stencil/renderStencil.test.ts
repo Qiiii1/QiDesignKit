@@ -42,6 +42,26 @@ function countColor(imageData: ImageData, rgb: [number, number, number]): number
   return count;
 }
 
+function countPixelsWhere(
+  imageData: ImageData,
+  predicate: (r: number, g: number, b: number, a: number) => boolean,
+): number {
+  let count = 0;
+  for (let index = 0; index < imageData.data.length; index += 4) {
+    if (
+      predicate(
+        imageData.data[index],
+        imageData.data[index + 1],
+        imageData.data[index + 2],
+        imageData.data[index + 3],
+      )
+    ) {
+      count += 1;
+    }
+  }
+  return count;
+}
+
 describe("renderStencilImageData", () => {
   it("applies threshold and transparent background", () => {
     const output = renderStencilImageData({
@@ -135,8 +155,8 @@ describe("renderStencilImageData", () => {
     expect(countOpaque(first)).not.toBe(countOpaque(second));
   });
 
-  it("renders diffusion marks without filling the whole selected region", () => {
-    const source = makeImageData(Array.from({ length: 256 }, () => 60), 16);
+  it("renders a solid diffusion body with carved internal channels", () => {
+    const source = makeImageData(Array.from({ length: 900 }, () => 60), 30);
     const settings = {
       ...DEFAULT_STENCIL_SETTINGS,
       visualMode: "diffusion" as const,
@@ -146,18 +166,51 @@ describe("renderStencilImageData", () => {
       breathingEnabled: false,
       flowEnabled: false,
       textureDensity: 0,
-      diffusionStrength: 0.7,
-      diffusionLineSpacing: 12,
-      diffusionLineWidth: 2,
-      diffusionDotDensity: 0.35,
+      diffusionStrength: 0.8,
+      diffusionLineSpacing: 11,
+      diffusionLineWidth: 2.6,
+      diffusionDotDensity: 0.5,
       diffusionGrowth: 1,
     };
 
     const output = renderStencilImageData({ source, settings, time: 0 });
     const foregroundPixels = countColor(output, [0, 170, 0]);
+    const carvedPixels = countColor(output, [255, 255, 255]);
 
-    expect(foregroundPixels).toBeGreaterThan(0);
-    expect(foregroundPixels).toBeLessThan(256);
+    expect(foregroundPixels).toBeGreaterThan(carvedPixels);
+    expect(carvedPixels).toBeGreaterThan(0);
+    expect(foregroundPixels).toBeGreaterThan(450);
+  });
+
+  it("renders pale diffusion trails around carved channels", () => {
+    const source = makeImageData(Array.from({ length: 900 }, () => 65), 30);
+    const settings = {
+      ...DEFAULT_STENCIL_SETTINGS,
+      visualMode: "diffusion" as const,
+      foregroundColor: "#00aa00",
+      backgroundMode: "white" as const,
+      threshold: 180,
+      breathingEnabled: false,
+      flowEnabled: false,
+      diffusionStrength: 0.9,
+      diffusionLineSpacing: 10,
+      diffusionLineWidth: 1.8,
+      diffusionDotDensity: 0.35,
+      diffusionGrowth: 1,
+    };
+
+    const output = renderStencilImageData({ source, settings, time: 0.8 });
+    const paleTrailPixels = countPixelsWhere(output, (r, g, b, a) => (
+      a === 255
+      && r > 0
+      && r < 255
+      && g > 170
+      && g < 255
+      && b > 0
+      && b < 255
+    ));
+
+    expect(paleTrailPixels).toBeGreaterThan(0);
   });
 
   it("changes diffusion output when line and dot settings change", () => {
@@ -197,7 +250,7 @@ describe("renderStencilImageData", () => {
     expect(Array.from(fine.data)).not.toEqual(Array.from(sparse.data));
   });
 
-  it("reveals more diffusion texture as animation time advances", () => {
+  it("reveals more carved diffusion channels as animation time advances", () => {
     const source = makeImageData(Array.from({ length: 900 }, () => 50), 30);
     const settings = {
       ...DEFAULT_STENCIL_SETTINGS,
@@ -220,7 +273,7 @@ describe("renderStencilImageData", () => {
     const early = renderStencilImageData({ source, settings, time: 0 });
     const late = renderStencilImageData({ source, settings, time: 3 });
 
-    expect(countColor(late, [0, 170, 0]))
-      .toBeGreaterThan(countColor(early, [0, 170, 0]));
+    expect(countColor(late, [255, 255, 255]))
+      .toBeGreaterThan(countColor(early, [255, 255, 255]));
   });
 });
