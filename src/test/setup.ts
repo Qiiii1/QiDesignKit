@@ -10,6 +10,26 @@ class ResizeObserverStub {
 }
 
 vi.stubGlobal("ResizeObserver", ResizeObserverStub);
+class ImageDataStub {
+  readonly data: Uint8ClampedArray;
+  readonly width: number;
+  readonly height: number;
+  readonly colorSpace = "srgb";
+
+  constructor(dataOrWidth: Uint8ClampedArray | number, width: number, height?: number) {
+    if (typeof dataOrWidth === "number") {
+      this.width = dataOrWidth;
+      this.height = width;
+      this.data = new Uint8ClampedArray(this.width * this.height * 4);
+      return;
+    }
+
+    this.data = dataOrWidth;
+    this.width = width;
+    this.height = height ?? dataOrWidth.length / width / 4;
+  }
+}
+vi.stubGlobal("ImageData", ImageDataStub);
 afterEach(cleanup);
 Object.defineProperty(HTMLCanvasElement.prototype, "getContext", {
   value: vi.fn(() => ({
